@@ -86,7 +86,7 @@
 </script>
 
 {#if href && !isDisabled}
-	<a {href} class={computedClass} aria-label={ariaLabel}>
+	<a {href} class={computedClass} aria-label={ariaLabel} {onclick}>
 		{@render children()}
 	</a>
 {:else}
