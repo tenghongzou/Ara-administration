@@ -12,13 +12,29 @@
 	let { filters, onFilterChange, showAdvanced = false }: Props = $props();
 
 	let localFilters = $state<LogFilters>({
-		action: filters.action || '',
-		resource: filters.resource || '',
-		status: filters.status || '',
-		search: filters.search || '',
-		dateRange: filters.dateRange
+		action: '',
+		resource: '',
+		status: '',
+		search: '',
+		dateRange: undefined
 	});
-	let showDateRange = $state(showAdvanced);
+	let showDateRange = $state(false);
+
+	// 同步外部 filters prop 變更
+	$effect(() => {
+		localFilters = {
+			action: filters.action || '',
+			resource: filters.resource || '',
+			status: filters.status || '',
+			search: filters.search || '',
+			dateRange: filters.dateRange
+		};
+	});
+
+	// 同步外部 showAdvanced prop 變更
+	$effect(() => {
+		showDateRange = showAdvanced;
+	});
 
 	// 當顯示日期篩選時初始化 dateRange
 	function toggleDateRange() {

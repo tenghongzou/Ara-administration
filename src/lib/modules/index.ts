@@ -1,5 +1,9 @@
 import type { ModuleConfig, ModuleRegistry, NavItem } from './types';
 import { navigationConfig, sortNavigation } from './navigation';
+import { subscriptionsModuleConfig } from './subscriptions';
+import { usersModuleConfig } from './users';
+import { rolesModuleConfig } from './roles';
+import { settingsModuleConfig } from './settings';
 
 /**
  * 模組註冊中心實作
@@ -67,6 +71,18 @@ moduleRegistry.register({
 	navigation: navigationConfig,
 	enabled: true
 });
+
+// 註冊訂閱模組
+moduleRegistry.register(subscriptionsModuleConfig);
+
+// 註冊使用者模組
+moduleRegistry.register(usersModuleConfig);
+
+// 註冊角色模組
+moduleRegistry.register(rolesModuleConfig);
+
+// 註冊設定模組
+moduleRegistry.register(settingsModuleConfig);
 
 // 匯出類型和工具
 export type { ModuleConfig, ModuleRegistry, NavItem } from './types';

@@ -27,7 +27,7 @@
 	let canvas: HTMLCanvasElement;
 	let chart: Chart<'doughnut'> | null = null;
 
-	const defaultOptions: ChartOptions<'doughnut'> = {
+	let defaultOptions = $derived<ChartOptions<'doughnut'>>({
 		responsive: true,
 		maintainAspectRatio: false,
 		plugins: {
@@ -51,7 +51,7 @@
 			}
 		},
 		cutout: doughnut ? '60%' : 0
-	};
+	});
 
 	function createChart() {
 		if (!browser || !canvas) return;

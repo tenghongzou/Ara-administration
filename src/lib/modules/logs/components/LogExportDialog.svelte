@@ -62,9 +62,9 @@
 		<div class="space-y-6">
 			<!-- 格式選擇 -->
 			<div>
-				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+				<span class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
 					匯出格式
-				</label>
+				</span>
 				<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
 					{#each formatOptions as format}
 						<button
@@ -85,9 +85,9 @@
 			<!-- 欄位選擇 -->
 			<div>
 				<div class="flex items-center justify-between mb-3">
-					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+					<span class="block text-sm font-medium text-gray-700 dark:text-gray-300">
 						匯出欄位
-					</label>
+					</span>
 					<div class="flex gap-2">
 						<button
 							type="button"

@@ -29,7 +29,7 @@
 	let canvas: HTMLCanvasElement;
 	let chart: Chart<'bar'> | null = null;
 
-	const defaultOptions: ChartOptions<'bar'> = {
+	let defaultOptions = $derived<ChartOptions<'bar'>>({
 		responsive: true,
 		maintainAspectRatio: false,
 		indexAxis: horizontal ? 'y' : 'x',
@@ -44,7 +44,7 @@
 				beginAtZero: true
 			}
 		}
-	};
+	});
 
 	function createChart() {
 		if (!browser || !canvas) return;
