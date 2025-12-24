@@ -80,13 +80,16 @@
 		goto('/login');
 	}
 
-	function isActive(href: string): boolean {
+	function isActive(href: string, exact: boolean = false): boolean {
+		if (exact) {
+			return $page.url.pathname === href;
+		}
 		return $page.url.pathname === href || $page.url.pathname.startsWith(href + '/');
 	}
 
 	function hasActiveChild(item: NavItem): boolean {
 		if (!item.children) return false;
-		return item.children.some((child) => isActive(child.href));
+		return item.children.some((child) => isActive(child.href, true));
 	}
 
 	function isExpanded(href: string): boolean {
@@ -229,11 +232,11 @@
 												class={cn(
 													'block px-3 py-1.5 rounded-md text-sm',
 													'transition-colors duration-200',
-													isActive(child.href)
+													isActive(child.href, true)
 														? 'text-[var(--color-primary-600)] font-medium'
 														: 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100'
 												)}
-												aria-current={isActive(child.href) ? 'page' : undefined}
+												aria-current={isActive(child.href, true) ? 'page' : undefined}
 											>
 												{child.label}
 											</a>
