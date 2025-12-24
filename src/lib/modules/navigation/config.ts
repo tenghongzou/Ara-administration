@@ -37,13 +37,6 @@ export const navigationConfig: NavItem[] = [
 		]
 	},
 	{
-		id: 'notifications',
-		label: '通知中心',
-		href: '/notifications',
-		icon: navIcons.notifications,
-		order: 20
-	},
-	{
 		id: 'settings',
 		label: '設定',
 		href: '/settings',
