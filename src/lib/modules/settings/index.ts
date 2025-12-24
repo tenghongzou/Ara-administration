@@ -6,6 +6,8 @@
 // Types
 export type {
 	SettingsModule,
+	SettingsGroup,
+	SettingsGroupId,
 	GeneralSettings,
 	NotificationSettings,
 	EmailNotificationSettings,
@@ -17,6 +19,7 @@ export type {
 } from './types';
 
 export {
+	settingsGroups,
 	themeOptions,
 	languageOptions,
 	settingsModuleIcons,

@@ -6,6 +6,14 @@ import type { Permission } from '$lib/permissions';
 
 // ==================== 設定模組選項 ====================
 
+export type SettingsGroupId = 'personal' | 'security' | 'system';
+
+export interface SettingsGroup {
+	id: SettingsGroupId;
+	title: string;
+	description?: string;
+}
+
 export interface SettingsModule {
 	id: string;
 	title: string;
@@ -15,7 +23,14 @@ export interface SettingsModule {
 	iconBgColor: string;
 	iconColor: string;
 	permission?: Permission;
+	group: SettingsGroupId;
 }
+
+export const settingsGroups: SettingsGroup[] = [
+	{ id: 'personal', title: '個人設定', description: '自訂您的使用體驗' },
+	{ id: 'security', title: '安全與通知', description: '管理帳號安全和通知偏好' },
+	{ id: 'system', title: '系統管理', description: '管理系統設定和使用者' }
+];
 
 // ==================== 一般設定 ====================
 
@@ -106,6 +121,7 @@ export const settingsModuleIcons = {
 // ==================== 預設設定模組列表 ====================
 
 export const defaultSettingsModules: SettingsModule[] = [
+	// 個人設定
 	{
 		id: 'general',
 		title: '一般設定',
@@ -113,7 +129,8 @@ export const defaultSettingsModules: SettingsModule[] = [
 		href: '/settings/general',
 		icon: settingsModuleIcons.general,
 		iconBgColor: 'bg-blue-100 dark:bg-blue-900/30',
-		iconColor: 'text-blue-600 dark:text-blue-400'
+		iconColor: 'text-blue-600 dark:text-blue-400',
+		group: 'personal'
 	},
 	{
 		id: 'profile',
@@ -122,8 +139,10 @@ export const defaultSettingsModules: SettingsModule[] = [
 		href: '/settings/profile',
 		icon: settingsModuleIcons.profile,
 		iconBgColor: 'bg-green-100 dark:bg-green-900/30',
-		iconColor: 'text-green-600 dark:text-green-400'
+		iconColor: 'text-green-600 dark:text-green-400',
+		group: 'personal'
 	},
+	// 安全與通知
 	{
 		id: 'security',
 		title: '安全設定',
@@ -131,7 +150,8 @@ export const defaultSettingsModules: SettingsModule[] = [
 		href: '/settings/security',
 		icon: settingsModuleIcons.security,
 		iconBgColor: 'bg-orange-100 dark:bg-orange-900/30',
-		iconColor: 'text-orange-600 dark:text-orange-400'
+		iconColor: 'text-orange-600 dark:text-orange-400',
+		group: 'security'
 	},
 	{
 		id: 'notifications',
@@ -140,7 +160,8 @@ export const defaultSettingsModules: SettingsModule[] = [
 		href: '/settings/notifications',
 		icon: settingsModuleIcons.notifications,
 		iconBgColor: 'bg-purple-100 dark:bg-purple-900/30',
-		iconColor: 'text-purple-600 dark:text-purple-400'
+		iconColor: 'text-purple-600 dark:text-purple-400',
+		group: 'security'
 	},
 	{
 		id: 'notification-center',
@@ -149,8 +170,10 @@ export const defaultSettingsModules: SettingsModule[] = [
 		href: '/notifications',
 		icon: settingsModuleIcons.notificationCenter,
 		iconBgColor: 'bg-cyan-100 dark:bg-cyan-900/30',
-		iconColor: 'text-cyan-600 dark:text-cyan-400'
+		iconColor: 'text-cyan-600 dark:text-cyan-400',
+		group: 'security'
 	},
+	// 系統管理
 	{
 		id: 'logs',
 		title: '稽核日誌',
@@ -159,7 +182,8 @@ export const defaultSettingsModules: SettingsModule[] = [
 		icon: settingsModuleIcons.logs,
 		iconBgColor: 'bg-gray-100 dark:bg-gray-800',
 		iconColor: 'text-gray-600 dark:text-gray-400',
-		permission: 'logs:read'
+		permission: 'logs:read',
+		group: 'system'
 	},
 	{
 		id: 'users',
@@ -169,7 +193,8 @@ export const defaultSettingsModules: SettingsModule[] = [
 		icon: settingsModuleIcons.users,
 		iconBgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
 		iconColor: 'text-indigo-600 dark:text-indigo-400',
-		permission: 'users:read'
+		permission: 'users:read',
+		group: 'system'
 	},
 	{
 		id: 'roles',
@@ -179,6 +204,7 @@ export const defaultSettingsModules: SettingsModule[] = [
 		icon: settingsModuleIcons.roles,
 		iconBgColor: 'bg-rose-100 dark:bg-rose-900/30',
 		iconColor: 'text-rose-600 dark:text-rose-400',
-		permission: 'roles:read'
+		permission: 'roles:read',
+		group: 'system'
 	}
 ];
