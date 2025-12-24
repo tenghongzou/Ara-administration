@@ -1,0 +1,83 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+	:root {
+		color-scheme: light;
+
+		/* Primary - 主要品牌色 */
+		--color-primary-50: #eff6ff;
+		--color-primary-100: #dbeafe;
+		--color-primary-200: #bfdbfe;
+		--color-primary-300: #93c5fd;
+		--color-primary-400: #60a5fa;
+		--color-primary-500: #3b82f6;
+		--color-primary-600: #2563eb;
+		--color-primary-700: #1d4ed8;
+		--color-primary-800: #1e40af;
+		--color-primary-900: #1e3a8a;
+		--color-primary-950: #172554;
+
+		/* Surface - 表面色 */
+		--color-surface: #ffffff;
+		--color-surface-secondary: #f9fafb;
+		--color-surface-tertiary: #f3f4f6;
+		--color-border: #e5e7eb;
+		--color-border-secondary: #d1d5db;
+	}
+
+	:root.dark {
+		color-scheme: dark;
+
+		--color-surface: #111827;
+		--color-surface-secondary: #1f2937;
+		--color-surface-tertiary: #374151;
+		--color-border: #374151;
+		--color-border-secondary: #4b5563;
+	}
+
+	html {
+		@apply antialiased;
+	}
+
+	body {
+		@apply bg-gray-50 text-gray-900;
+		@apply dark:bg-gray-950 dark:text-gray-100;
+	}
+}
+
+@layer components {
+	.btn {
+		@apply inline-flex items-center justify-center;
+		@apply px-4 py-2 text-sm font-medium;
+		@apply rounded-md transition-colors;
+		@apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+	}
+
+	.btn-primary {
+		@apply bg-[var(--color-primary-600)] text-white;
+		@apply hover:bg-[var(--color-primary-700)];
+		@apply focus:ring-[var(--color-primary-500)];
+	}
+
+	.btn-secondary {
+		@apply bg-gray-100 text-gray-900;
+		@apply hover:bg-gray-200;
+		@apply dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700;
+	}
+
+	.input {
+		@apply w-full px-3 py-2;
+		@apply border border-gray-300 rounded-md;
+		@apply text-sm placeholder-gray-400;
+		@apply bg-white dark:bg-gray-900;
+		@apply dark:border-gray-600 dark:text-gray-100;
+		@apply focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-[var(--color-primary-500)];
+	}
+
+	.card {
+		@apply bg-white rounded-lg border border-gray-200;
+		@apply dark:bg-gray-900 dark:border-gray-700;
+	}
+}

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-TW">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+		<!-- 阻塞式主題初始化：在任何內容渲染前套用，避免閃爍 -->
+		<script>
+			(function() {
+				const theme = localStorage.getItem('theme');
+				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				const isDark = theme === 'dark' || (!theme && prefersDark) || (theme === 'system' && prefersDark);
+				if (isDark) {
+					document.documentElement.classList.add('dark');
+					document.documentElement.style.colorScheme = 'dark';
+				} else {
+					document.documentElement.style.colorScheme = 'light';
+				}
+			})();
+		</script>
+
+		<!-- 預連接重要資源 -->
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>
