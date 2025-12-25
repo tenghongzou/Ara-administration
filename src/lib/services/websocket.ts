@@ -2,6 +2,8 @@ import { writable, derived, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import { notifications } from '$lib/stores/notifications';
 import { auth } from '$lib/stores/auth';
+import { pushNotificationService } from './push-notification';
+import type { NotificationType } from '$lib/types';
 
 // WebSocket 連線狀態
 export type WebSocketStatus = 'connecting' | 'connected' | 'disconnected' | 'reconnecting' | 'error';
@@ -19,6 +21,10 @@ export interface NotificationPayload {
 	title: string;
 	message: string;
 	link?: string;
+	/** 通知類別（用於判斷是否符合使用者偏好設定） */
+	category?: NotificationType;
+	/** 是否為緊急通知（靜音時段內仍會顯示） */
+	urgent?: boolean;
 }
 
 // WebSocket 配置
@@ -226,11 +232,25 @@ function createWebSocketService() {
 	}
 
 	function handleNotification(payload: NotificationPayload) {
-		notifications.add({
+		// 1. 添加到通知中心
+		notifications.add(
+			{
+				type: payload.type,
+				title: payload.title,
+				message: payload.message,
+				link: payload.link
+			},
+			{ source: 'remote' }
+		);
+
+		// 2. 觸發即時推送（Toast、瀏覽器通知、音效）
+		pushNotificationService.push({
 			type: payload.type,
 			title: payload.title,
 			message: payload.message,
-			link: payload.link
+			link: payload.link,
+			category: payload.category,
+			urgent: payload.urgent
 		});
 	}
 

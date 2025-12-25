@@ -15,3 +15,6 @@ export * from './mock-data';
 
 // WebSocket service
 export * from './websocket';
+
+// Push notification service
+export { pushNotificationService } from './push-notification';

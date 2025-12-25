@@ -2,7 +2,8 @@
 	import { config } from '$lib/constants';
 	import { toast } from '$lib/stores/toast';
 	import { currentUser } from '$lib/stores/auth';
-	import { notificationApi } from '$lib/services';
+	import { notificationSettings } from '$lib/stores/notification-settings';
+	import { notificationApi, pushNotificationService } from '$lib/services';
 	import { PageContainer } from '$lib/components/layout';
 	import type { NotificationSettings } from '$lib/types';
 	import {
@@ -61,7 +62,9 @@
 
 		saving = true;
 		try {
-			await notificationApi.updateSettings(user.id, settings);
+			const updatedSettings = await notificationApi.updateSettings(user.id, settings);
+			// 同步到客戶端 store，讓即時推送服務使用最新設定
+			notificationSettings.set(updatedSettings);
 			hasChanges = false;
 			toast.success('通知設定已儲存');
 		} catch (error) {
@@ -98,7 +101,13 @@
 
 	async function testPushNotification() {
 		try {
-			await notificationApi.testPushNotification();
+			// 使用即時推送服務發送測試通知
+			pushNotificationService.push({
+				type: 'info',
+				title: '測試通知',
+				message: '這是一則測試推播通知，用於確認通知功能正常運作。',
+				urgent: false
+			});
 			toast.success('測試通知已發送');
 		} catch (error) {
 			toast.error('發送失敗');

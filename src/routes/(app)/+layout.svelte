@@ -4,10 +4,11 @@
 	import { browser } from '$app/environment';
 	import { Sidebar, Header } from '$lib/components/layout';
 	import { Toast, Spinner } from '$lib/components/ui';
-	import { auth, isAuthenticated, isAuthInitialized, hasAnyPermission } from '$lib/stores/auth';
+	import { auth, isAuthenticated, isAuthInitialized, hasAnyPermission, currentUser } from '$lib/stores/auth';
 	import { getRoutePermissions } from '$lib/permissions';
 	import { toast } from '$lib/stores/toast';
-	import { websocket, initWebSocket, closeWebSocket } from '$lib/services';
+	import { notificationSettings } from '$lib/stores/notification-settings';
+	import { websocket, initWebSocket, closeWebSocket, notificationApi, pushNotificationService } from '$lib/services';
 	import { notifications } from '$lib/stores/notifications';
 	import type { Notification } from '$lib/stores/notifications';
 	import { moduleRegistry } from '$lib/modules';
@@ -50,6 +51,21 @@
 		if (browser && !initialized) {
 			auth.initialize();
 		}
+	});
+
+	// 載入通知設定
+	$effect(() => {
+		if (!browser || !initialized || !authenticated) return;
+
+		const user = $currentUser;
+		if (!user) return;
+
+		// 從 API 載入使用者通知設定並同步到 store
+		notificationApi.getSettings(user.id).then((settings) => {
+			notificationSettings.set(settings);
+			// 預載音效資源
+			pushNotificationService.preloadSounds();
+		});
 	});
 
 	// WebSocket 連線管理
@@ -100,9 +116,10 @@
 				closeWebSocket();
 			};
 		} else {
-			// 未認證：確保關閉連線
+			// 未認證：確保關閉連線並重設設定
 			closeWebSocket();
 			notifications.reset();
+			notificationSettings.reset();
 		}
 	});
 
