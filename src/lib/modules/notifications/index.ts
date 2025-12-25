@@ -19,6 +19,11 @@ export { notificationsService, categoryOptions } from './services/notifications.
 export { default as NotificationFiltersPanel } from './components/NotificationFilters.svelte';
 export { default as NotificationItem } from './components/NotificationItem.svelte';
 export { default as NotificationBatchActions } from './components/NotificationBatchActions.svelte';
+export { default as NotificationHeader } from './components/NotificationHeader.svelte';
+export { default as NotificationEmptyState } from './components/NotificationEmptyState.svelte';
+export { default as NotificationList } from './components/NotificationList.svelte';
+export { default as NotificationsContent } from './components/NotificationsContent.svelte';
+export { default as NotificationDetailContent } from './components/NotificationDetailContent.svelte';
 
 // Module config for registration
 import type { ModuleConfig } from '../types';

@@ -9,6 +9,8 @@ export { default as StatsGrid } from './components/StatsGrid.svelte';
 export { default as ActivityFeed } from './components/ActivityFeed.svelte';
 export { default as QuickActions } from './components/QuickActions.svelte';
 export { default as SubscriptionReminders } from './components/SubscriptionReminders.svelte';
+export { default as DashboardCharts } from './components/DashboardCharts.svelte';
+export { default as DashboardContent } from './components/DashboardContent.svelte';
 
 // Module config for registration
 import type { ModuleConfig } from '../types';

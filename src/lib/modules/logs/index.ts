@@ -33,6 +33,9 @@ export { default as LogDetailModal } from './components/LogDetail.svelte';
 export { default as LogFiltersPanel } from './components/LogFilters.svelte';
 export { default as LogStatsPanel } from './components/LogStats.svelte';
 export { default as LogExportDialog } from './components/LogExportDialog.svelte';
+export { default as LogActionButtons } from './components/LogActionButtons.svelte';
+export { default as LogTable } from './components/LogTable.svelte';
+export { default as LogsContent } from './components/LogsContent.svelte';
 
 // Module config for registration
 import type { ModuleConfig } from '../types';

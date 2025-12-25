@@ -22,6 +22,10 @@ export { rolesService } from './services/roles.service';
 export { default as RoleCard } from './components/RoleCard.svelte';
 export { default as PermissionSelector } from './components/PermissionSelector.svelte';
 export { default as RoleForm } from './components/RoleForm.svelte';
+export { default as RolesDataGrid } from './components/RolesDataGrid.svelte';
+export { default as RolesDeleteModal } from './components/RolesDeleteModal.svelte';
+export { default as RolesContent } from './components/RolesContent.svelte';
+export { default as RoleDetailContent } from './components/RoleDetailContent.svelte';
 
 // Module config for registration
 import type { ModuleConfig } from '../types';
