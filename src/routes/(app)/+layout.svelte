@@ -18,13 +18,18 @@
 	// 從模組系統取得導航配置
 	const navItems = moduleRegistry.getNavigation();
 
-	let authenticated = $state(false);
-	let initialized = $state(false);
-	let wsStatus = $state<string>('disconnected');
+	// 使用 $derived 響應式追蹤 store 值（Svelte 5 正確方式）
+	let authenticated = $derived($isAuthenticated);
+	let initialized = $derived($isAuthInitialized);
 
-	isAuthenticated.subscribe((value) => (authenticated = value));
-	isAuthInitialized.subscribe((value) => (initialized = value));
-	websocket.status.subscribe((value) => (wsStatus = value));
+	// websocket.status 是嵌套 store，需要用 $effect 訂閱
+	let wsStatus = $state<string>('disconnected');
+	$effect(() => {
+		const unsubscribe = websocket.status.subscribe((value) => {
+			wsStatus = value;
+		});
+		return unsubscribe;
+	});
 
 	// Route guard: redirect to login if not authenticated
 	$effect(() => {
@@ -156,7 +161,9 @@
 
 		<main class="lg:ml-64 pt-16 flex-1 overflow-hidden flex flex-col">
 			<div class="flex-1 overflow-auto min-h-0">
-				{@render children()}
+				{#key $page.url.pathname}
+					{@render children()}
+				{/key}
 			</div>
 		</main>
 
