@@ -14,6 +14,11 @@ const config = {
 			strict: true
 		}),
 
+		// 強制使用絕對路徑，避免 SSG 預渲染頁面的相對路徑問題
+		paths: {
+			relative: false
+		},
+
 		alias: {
 			$lib: 'src/lib',
 			$components: 'src/lib/components',
