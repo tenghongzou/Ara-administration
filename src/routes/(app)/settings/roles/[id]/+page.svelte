@@ -19,14 +19,15 @@
 		key: '',
 		label: '',
 		description: '',
-		color: 'gray'
+		color: 'gray',
+		permissions: []
 	});
 	let formErrors = $state<RoleFormErrors>({});
 	let selectedPermissions = $state<Set<string>>(new Set());
 	let hasChanges = $state(false);
 
 	const roleId = $derived($page.params.id);
-	const canEdit = $derived(hasPermission('roles:update') && role && !(role.isSystem && role.key === 'admin'));
+	const canEdit = $derived(hasPermission('roles:update') && role && !(role.isSystem && role.key === 'admin') ? true : undefined);
 	const isAdminRole = $derived(role?.isSystem && role?.key === 'admin');
 
 	async function loadRole() {
@@ -42,7 +43,8 @@
 				key: role.key,
 				label: role.label,
 				description: role.description,
-				color: role.color
+				color: role.color,
+				permissions: role.permissions
 			};
 			selectedPermissions = new Set(role.permissions);
 		} catch (error) {
@@ -90,7 +92,8 @@
 				key: role.key,
 				label: role.label,
 				description: role.description,
-				color: role.color
+				color: role.color,
+				permissions: role.permissions
 			};
 			selectedPermissions = new Set(role.permissions);
 			hasChanges = false;

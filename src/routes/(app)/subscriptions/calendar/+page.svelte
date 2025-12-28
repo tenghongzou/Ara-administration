@@ -71,5 +71,5 @@
 	bind:open={showModal}
 	date={selectedDate}
 	subscriptions={selectedSubscriptions}
-	onclose={() => (showModal = false)}
+	onClose={() => (showModal = false)}
 />

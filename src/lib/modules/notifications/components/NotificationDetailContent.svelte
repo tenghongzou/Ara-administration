@@ -69,7 +69,7 @@
 
 				<div class="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
 					{#if notification.link}
-						<Button variant="default" onclick={() => goto(notification.link!)}>
+						<Button variant="primary" onclick={() => goto(notification.link!)}>
 							{#snippet children()}
 								<ExternalLink class="w-4 h-4 mr-2" />
 								前往相關頁面

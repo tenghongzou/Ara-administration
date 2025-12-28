@@ -86,7 +86,7 @@
 		onMonthChange?.(newYear, newMonth);
 	}
 
-	function handleDayClick(day: (typeof calendarGrid)[0]) {
+	function handleDayClick(day: ReturnType<typeof calendarGrid>[0]) {
 		if (day.date && day.data) {
 			onDayClick?.(day.dateStr, day.data.subscriptions);
 		}

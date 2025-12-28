@@ -8,15 +8,15 @@
 		open: boolean;
 		date: string | null;
 		subscriptions: Subscription[];
-		onclose: () => void;
+		onClose: () => void;
 	}
 
-	let { open = $bindable(), date, subscriptions, onclose }: Props = $props();
+	let { open = $bindable(), date, subscriptions, onClose }: Props = $props();
 
 	let totalCost = $derived(subscriptions.reduce((sum, s) => sum + s.cost, 0));
 </script>
 
-<Modal bind:open title={date ? subscriptionsService.formatFullDate(date) : ''} size="md" {onclose}>
+<Modal bind:open title={date ? subscriptionsService.formatFullDate(date) : ''} size="md" {onClose}>
 	{#snippet children()}
 		{#if subscriptions.length > 0}
 			<div class="space-y-3">

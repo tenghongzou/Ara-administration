@@ -8,7 +8,7 @@
 	import { getRoutePermissions } from '$lib/permissions';
 	import { toast } from '$lib/stores/toast';
 	import { notificationSettings } from '$lib/stores/notification-settings';
-	import { websocket, initWebSocket, closeWebSocket, notificationApi, pushNotificationService } from '$lib/services';
+	import { websocket, initWebSocket, closeWebSocket, notificationApi, pushNotificationService, sessionTimeout } from '$lib/services';
 	import { notifications } from '$lib/stores/notifications';
 	import type { Notification } from '$lib/stores/notifications';
 	import { moduleRegistry } from '$lib/modules';
@@ -50,6 +50,22 @@
 	$effect(() => {
 		if (browser && !initialized) {
 			auth.initialize();
+		}
+	});
+
+	// Session timeout 管理
+	$effect(() => {
+		if (!browser || !initialized) return;
+
+		if (authenticated) {
+			// 已認證：啟動 session timeout 監控
+			sessionTimeout.start();
+			return () => {
+				sessionTimeout.stop();
+			};
+		} else {
+			// 未認證：停止監控
+			sessionTimeout.stop();
 		}
 	});
 

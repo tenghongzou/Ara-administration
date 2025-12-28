@@ -124,7 +124,7 @@
 
 	function handleEmailToggle(key: string, value: boolean) {
 		if (settings) {
-			(settings.email as Record<string, unknown>)[key] = value;
+			(settings.email as unknown as Record<string, unknown>)[key] = value;
 			markChanged();
 		}
 	}
@@ -140,7 +140,7 @@
 
 	function handlePushToggle(key: string, value: boolean) {
 		if (settings) {
-			(settings.push as Record<string, unknown>)[key] = value;
+			(settings.push as unknown as Record<string, unknown>)[key] = value;
 			markChanged();
 		}
 	}
@@ -154,7 +154,7 @@
 
 	function handleInAppToggle(key: string, value: boolean) {
 		if (settings) {
-			(settings.inApp as Record<string, unknown>)[key] = value;
+			(settings.inApp as unknown as Record<string, unknown>)[key] = value;
 			markChanged();
 		}
 	}

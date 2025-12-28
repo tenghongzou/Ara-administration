@@ -23,10 +23,10 @@ export async function parseExcel(file: File): Promise<ParseResult> {
 				const worksheet = workbook.Sheets[firstSheetName];
 
 				// 轉換為 JSON，保留表頭
-				const jsonData = XLSX.utils.sheet_to_json<ParsedRow>(worksheet, {
+				const jsonData = XLSX.utils.sheet_to_json(worksheet, {
 					header: 1,
 					defval: ''
-				}) as string[][];
+				}) as unknown[][];
 
 				if (jsonData.length === 0) {
 					resolve({ data: [], headers: [], errors: [] });

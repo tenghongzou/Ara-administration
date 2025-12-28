@@ -18,7 +18,7 @@
 		disabled?: boolean;
 		required?: boolean;
 		class?: string;
-		onchange?: (event: Event) => void;
+		onchange?: (event: Event & { currentTarget: EventTarget & HTMLSelectElement }) => void;
 	}
 
 	let {

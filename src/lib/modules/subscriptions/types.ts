@@ -102,6 +102,8 @@ export interface UpcomingReminder {
 
 // ==================== 匯入相關 ====================
 
+export type ImportStep = 'upload' | 'mapping' | 'preview' | 'complete';
+
 export interface ImportResult {
 	success: number;
 	failed: number;

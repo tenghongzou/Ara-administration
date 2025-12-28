@@ -6,8 +6,8 @@
 		avatar: string;
 		name: string;
 		uploading?: boolean;
-		onUpload: (file: File) => void;
-		onRemove: () => void;
+		onUpload: (file: File) => void | Promise<void>;
+		onRemove: () => void | Promise<void>;
 	}
 
 	let { avatar, name, uploading = false, onUpload, onRemove }: Props = $props();

@@ -135,7 +135,7 @@
 		<Button variant="outline" onclick={() => (open = false)}>
 			{#snippet children()}取消{/snippet}
 		</Button>
-		<Button variant="default" onclick={handleExport} disabled={selectedFields.size === 0}>
+		<Button variant="primary" onclick={handleExport} disabled={selectedFields.size === 0}>
 			{#snippet children()}匯出{/snippet}
 		</Button>
 	{/snippet}

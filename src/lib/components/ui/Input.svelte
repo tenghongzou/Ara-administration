@@ -19,9 +19,9 @@
 		min?: string | number;
 		max?: string | number;
 		step?: string | number;
-		oninput?: (event: Event) => void;
-		onchange?: (event: Event) => void;
-		onblur?: (event: FocusEvent) => void;
+		oninput?: (event: Event & { currentTarget: EventTarget & HTMLInputElement }) => void;
+		onchange?: (event: Event & { currentTarget: EventTarget & HTMLInputElement }) => void;
+		onblur?: (event: FocusEvent & { currentTarget: EventTarget & HTMLInputElement }) => void;
 	}
 
 	let {

@@ -124,7 +124,7 @@
 						<td class="px-4 py-3 text-gray-600 dark:text-gray-400">{sub.row}</td>
 						<td class="px-4 py-3">
 							{#if hasErrors}
-								<Badge variant="danger">錯誤</Badge>
+								<Badge variant="error">錯誤</Badge>
 							{:else if isDuplicate}
 								<Badge variant="warning">重複</Badge>
 							{:else}

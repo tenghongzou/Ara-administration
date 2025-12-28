@@ -9,6 +9,7 @@ import {
 	checkRole
 } from '$lib/permissions';
 import { mockRoles } from '$lib/services/mock-data';
+import { sessionTimeout } from '$lib/services/auth/session-timeout';
 
 interface AuthState {
 	user: User | null;
@@ -97,6 +98,8 @@ function createAuthStore() {
 					isInitialized: true
 				};
 				persistState(newState);
+				// 記錄登入時間
+				sessionTimeout.recordLogin();
 				return newState;
 			});
 		},
@@ -140,6 +143,8 @@ function createAuthStore() {
 				error: null
 			};
 			persistState(newState);
+			// 清除 session 時間戳記
+			sessionTimeout.clearTimestamps();
 			set(newState);
 		},
 

@@ -13,7 +13,8 @@
 		key: '',
 		label: '',
 		description: '',
-		color: 'gray'
+		color: 'gray',
+		permissions: []
 	});
 	let formErrors = $state<RoleFormErrors>({});
 	let selectedPermissions = $state<Set<string>>(new Set());
