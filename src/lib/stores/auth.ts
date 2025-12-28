@@ -8,8 +8,8 @@ import {
 	checkAllPermissionsInList,
 	checkRole
 } from '$lib/permissions';
-import { mockRoles } from '$lib/services/mock-data';
 import { sessionTimeout } from '$lib/services/auth/session-timeout';
+import { authApi } from '$lib/services/auth/api';
 
 interface AuthState {
 	user: User | null;
@@ -21,15 +21,6 @@ interface AuthState {
 }
 
 const STORAGE_KEY = 'auth_state';
-
-/**
- * 根據角色 key 取得權限列表
- */
-function getPermissionsForRole(roleKey: string): string[] {
-	const role = mockRoles.find((r) => r.key === roleKey);
-	if (!role) return [];
-	return [...role.permissions];
-}
 
 function getInitialState(): AuthState {
 	const defaultState: AuthState = {
@@ -47,11 +38,12 @@ function getInitialState(): AuthState {
 			if (stored) {
 				const parsed = JSON.parse(stored);
 				const user = parsed.user || null;
+				const permissions = parsed.permissions || [];
 				return {
 					...defaultState,
 					user,
 					token: parsed.token || null,
-					userPermissions: user ? getPermissionsForRole(user.role) : [],
+					userPermissions: permissions,
 					isInitialized: true
 				};
 			}
@@ -71,7 +63,8 @@ function createAuthStore() {
 			if (state.token && state.user) {
 				localStorage.setItem(STORAGE_KEY, JSON.stringify({
 					user: state.user,
-					token: state.token
+					token: state.token,
+					permissions: state.userPermissions
 				}));
 			} else {
 				localStorage.removeItem(STORAGE_KEY);
@@ -86,9 +79,9 @@ function createAuthStore() {
 			update((state) => ({ ...state, isInitialized: true }));
 		},
 
-		setUser: (user: User, token: string) => {
+		setUser: (user: User, token: string, permissions?: string[]) => {
 			update((state) => {
-				const userPermissions = getPermissionsForRole(user.role);
+				const userPermissions = permissions || state.userPermissions || [];
 				const newState = {
 					...state,
 					user,
@@ -105,17 +98,13 @@ function createAuthStore() {
 		},
 
 		/**
-		 * 更新當前使用者資料（不影響登入狀態）
+		 * 設置使用者權限
 		 */
-		updateUser: (userData: Partial<User>) => {
+		setPermissions: (permissions: string[]) => {
 			update((state) => {
-				if (!state.user) return state;
-				const updatedUser = { ...state.user, ...userData };
-				const userPermissions = getPermissionsForRole(updatedUser.role);
 				const newState = {
 					...state,
-					user: updatedUser,
-					userPermissions
+					userPermissions: permissions
 				};
 				persistState(newState);
 				return newState;
@@ -123,14 +112,72 @@ function createAuthStore() {
 		},
 
 		/**
-		 * 重新載入當前使用者的權限（當角色權限被修改時呼叫）
+		 * 更新當前使用者資料（不影響登入狀態）
 		 */
-		refreshPermissions: () => {
+		updateUser: (userData: Partial<User>) => {
 			update((state) => {
 				if (!state.user) return state;
-				const userPermissions = getPermissionsForRole(state.user.role);
-				return { ...state, userPermissions };
+				const updatedUser = { ...state.user, ...userData };
+				const newState = {
+					...state,
+					user: updatedUser
+				};
+				persistState(newState);
+				return newState;
 			});
+		},
+
+		/**
+		 * 從後端重新載入當前使用者的權限
+		 */
+		refreshPermissions: async () => {
+			try {
+				const permissions = await authApi.getPermissions();
+				update((state) => {
+					const newState = { ...state, userPermissions: permissions };
+					persistState(newState);
+					return newState;
+				});
+			} catch (error) {
+				console.error('Failed to refresh permissions:', error);
+			}
+		},
+
+		/**
+		 * 驗證並刷新當前用戶狀態
+		 */
+		validateSession: async () => {
+			const state = get({ subscribe });
+			if (!state.token) return false;
+
+			try {
+				const { user } = await authApi.getCurrentUser();
+				const permissions = await authApi.getPermissions();
+				update((s) => {
+					const newState = {
+						...s,
+						user,
+						userPermissions: permissions,
+						isInitialized: true
+					};
+					persistState(newState);
+					return newState;
+				});
+				return true;
+			} catch {
+				// Token is invalid, clear auth state
+				const newState: AuthState = {
+					user: null,
+					token: null,
+					userPermissions: [],
+					isLoading: false,
+					isInitialized: true,
+					error: null
+				};
+				persistState(newState);
+				set(newState);
+				return false;
+			}
 		},
 
 		logout: () => {

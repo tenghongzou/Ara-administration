@@ -8,12 +8,10 @@ import type {
 	CreateSubscriptionData,
 	UpdateSubscriptionData,
 	SubscriptionStats,
-	BillingCycle,
 	ServiceCategory,
 	PaginatedData
 } from '$lib/types';
-import { mockSubscriptions, mockPaymentHistory } from '../mock-data';
-import { delay, createPaginatedResponse, sortByField, filterBySearch } from '../core';
+import { httpClient, HttpError } from '../core/http-client';
 
 export interface GetSubscriptionsParams {
 	page?: number;
@@ -26,291 +24,165 @@ export interface GetSubscriptionsParams {
 	sortDirection?: 'asc' | 'desc';
 }
 
-function toMonthlyCost(cost: number, cycle: BillingCycle): number {
-	switch (cycle) {
-		case 'weekly':
-			return cost * 4;
-		case 'monthly':
-			return cost;
-		case 'quarterly':
-			return cost / 3;
-		case 'semi-annual':
-			return cost / 6;
-		case 'annual':
-			return cost / 12;
-	}
+interface SubscriptionsResponse {
+	data: Subscription[];
+	pagination: {
+		page: number;
+		pageSize: number;
+		total: number;
+		totalPages: number;
+	};
+}
+
+interface SubscriptionResponse {
+	subscription: Subscription;
+}
+
+interface PaymentResponse {
+	payment: PaymentHistory;
 }
 
 export const subscriptionsApi = {
 	async getSubscriptions(params: GetSubscriptionsParams = {}): Promise<PaginatedData<Subscription>> {
-		await delay(600);
+		const searchParams = new URLSearchParams();
 
-		const {
-			page = 1,
-			pageSize = 10,
-			search,
-			category,
-			status,
-			billingCycle,
-			sortBy,
-			sortDirection = 'asc'
-		} = params;
+		if (params.page) searchParams.set('page', String(params.page));
+		if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
+		if (params.search) searchParams.set('search', params.search);
+		if (params.category) searchParams.set('category', params.category);
+		if (params.status) searchParams.set('status', params.status);
+		if (params.billingCycle) searchParams.set('billingCycle', params.billingCycle);
+		if (params.sortBy) searchParams.set('sortBy', params.sortBy);
+		if (params.sortDirection) searchParams.set('sortDirection', params.sortDirection);
 
-		let filtered = [...mockSubscriptions];
+		const query = searchParams.toString();
+		const response = await httpClient.get<SubscriptionsResponse>(
+			`/subscriptions${query ? `?${query}` : ''}`
+		);
 
-		// 搜尋過濾
-		filtered = filterBySearch(filtered, search, ['name']);
-
-		// 分類過濾
-		if (category) {
-			filtered = filtered.filter((sub) => sub.category === category);
-		}
-
-		// 狀態過濾
-		if (status) {
-			filtered = filtered.filter((sub) => sub.status === status);
-		}
-
-		// 帳單週期過濾
-		if (billingCycle) {
-			filtered = filtered.filter((sub) => sub.billingCycle === billingCycle);
-		}
-
-		// 排序
-		filtered = sortByField(filtered, sortBy, sortDirection);
-
-		return createPaginatedResponse(mockSubscriptions, filtered, page, pageSize);
+		return {
+			data: response.data,
+			pagination: response.pagination
+		};
 	},
 
 	async getSubscription(id: string): Promise<Subscription> {
-		await delay(400);
-		const subscription = mockSubscriptions.find((s) => s.id === id);
-		if (!subscription) throw new Error('訂閱不存在');
-		return subscription;
+		try {
+			const response = await httpClient.get<SubscriptionResponse>(`/subscriptions/${id}`);
+			return response.subscription;
+		} catch (error) {
+			if (error instanceof HttpError && error.status === 404) {
+				throw new Error('訂閱不存在');
+			}
+			throw error;
+		}
 	},
 
 	async createSubscription(data: CreateSubscriptionData): Promise<Subscription> {
-		await delay(600);
-		const newSubscription: Subscription = {
-			id: String(mockSubscriptions.length + 1),
-			name: data.name,
-			category: data.category,
-			cost: data.cost,
-			currency: data.currency || 'TWD',
-			billingCycle: data.billingCycle,
-			nextBillingDate: data.nextBillingDate,
-			status: data.status || 'active',
-			description: data.description,
-			website: data.website,
-			accountEmail: data.accountEmail,
-			paymentMethod: data.paymentMethod,
-			autoRenew: data.autoRenew ?? true,
-			reminderDays: data.reminderDays,
-			startDate: data.startDate || new Date().toISOString().split('T')[0],
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString()
-		};
-		mockSubscriptions.push(newSubscription);
-		return newSubscription;
+		try {
+			const response = await httpClient.post<SubscriptionResponse>('/subscriptions', data);
+			return response.subscription;
+		} catch (error) {
+			if (error instanceof HttpError) {
+				throw new Error(error.error || '建立訂閱失敗');
+			}
+			throw error;
+		}
 	},
 
 	async updateSubscription(id: string, data: UpdateSubscriptionData): Promise<Subscription> {
-		await delay(500);
-		const index = mockSubscriptions.findIndex((s) => s.id === id);
-		if (index === -1) throw new Error('訂閱不存在');
-
-		mockSubscriptions[index] = {
-			...mockSubscriptions[index],
-			...data,
-			updatedAt: new Date().toISOString()
-		};
-		return mockSubscriptions[index];
+		try {
+			const response = await httpClient.patch<SubscriptionResponse>(`/subscriptions/${id}`, data);
+			return response.subscription;
+		} catch (error) {
+			if (error instanceof HttpError) {
+				if (error.status === 404) {
+					throw new Error('訂閱不存在');
+				}
+				throw new Error(error.error || '更新訂閱失敗');
+			}
+			throw error;
+		}
 	},
 
 	async deleteSubscription(id: string): Promise<void> {
-		await delay(400);
-		const index = mockSubscriptions.findIndex((s) => s.id === id);
-		if (index === -1) throw new Error('訂閱不存在');
-		mockSubscriptions.splice(index, 1);
-	},
-
-	async getPaymentHistory(subscriptionId: string): Promise<PaymentHistory[]> {
-		await delay(400);
-		return mockPaymentHistory
-			.filter((p) => p.subscriptionId === subscriptionId)
-			.sort((a, b) => new Date(b.paidAt).getTime() - new Date(a.paidAt).getTime());
+		try {
+			await httpClient.delete(`/subscriptions/${id}`);
+		} catch (error) {
+			if (error instanceof HttpError) {
+				if (error.status === 404) {
+					throw new Error('訂閱不存在');
+				}
+			}
+			throw error;
+		}
 	},
 
 	async getStatistics(): Promise<SubscriptionStats> {
-		await delay(300);
+		const response = await httpClient.get<SubscriptionStats>('/subscriptions/stats');
+		return response;
+	},
 
-		const activeSubscriptions = mockSubscriptions.filter((s) => s.status === 'active');
-
-		const totalMonthly = activeSubscriptions.reduce((sum, sub) => {
-			return sum + toMonthlyCost(sub.cost, sub.billingCycle);
-		}, 0);
-
-		const now = new Date();
-		const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-		const upcomingCount = activeSubscriptions.filter((sub) => {
-			const nextBilling = new Date(sub.nextBillingDate);
-			return nextBilling >= now && nextBilling <= sevenDaysLater;
-		}).length;
-
-		return {
-			totalMonthly: Math.round(totalMonthly),
-			totalYearly: Math.round(totalMonthly * 12),
-			upcomingCount,
-			activeCount: activeSubscriptions.length
-		};
+	async getUpcoming(days: number = 7): Promise<Subscription[]> {
+		const response = await httpClient.get<{ data: Subscription[] }>(
+			`/subscriptions/upcoming?days=${days}`
+		);
+		return response.data;
 	},
 
 	/**
 	 * 取得即將到期的訂閱提醒
 	 */
 	async getUpcomingReminders(days: number = 7): Promise<UpcomingReminder[]> {
-		await delay(300);
+		const response = await httpClient.get<{ data: UpcomingReminder[] }>(
+			`/subscriptions/reminders?days=${days}`
+		);
+		return response.data;
+	},
 
-		const now = new Date();
-		now.setHours(0, 0, 0, 0);
-		const futureDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+	/**
+	 * 取得付款歷史
+	 */
+	async getPaymentHistory(subscriptionId: string): Promise<PaymentHistory[]> {
+		const response = await httpClient.get<{ data: PaymentHistory[] }>(
+			`/subscriptions/${subscriptionId}/payments`
+		);
+		return response.data;
+	},
 
-		const activeSubscriptions = mockSubscriptions.filter((s) => s.status === 'active');
-
-		const reminders: UpcomingReminder[] = [];
-
-		for (const subscription of activeSubscriptions) {
-			const nextBilling = new Date(subscription.nextBillingDate);
-			nextBilling.setHours(0, 0, 0, 0);
-
-			const daysUntilBilling = Math.ceil(
-				(nextBilling.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)
-			);
-
-			// 檢查是否在提醒範圍內 (考慮用戶設定的提醒天數)
-			const reminderDays = subscription.reminderDays || 3;
-
-			if (daysUntilBilling <= reminderDays && daysUntilBilling >= -7) {
-				let reminderType: UpcomingReminder['reminderType'];
-				if (daysUntilBilling < 0) {
-					reminderType = 'overdue';
-				} else if (daysUntilBilling === 0) {
-					reminderType = 'due_today';
-				} else {
-					reminderType = 'due_soon';
-				}
-
-				reminders.push({
-					subscription,
-					daysUntilBilling,
-					reminderType
-				});
-			}
-		}
-
-		// 按日期排序 (最近的在前)
-		return reminders.sort((a, b) => a.daysUntilBilling - b.daysUntilBilling);
+	/**
+	 * 新增付款記錄
+	 */
+	async createPayment(subscriptionId: string, data: CreatePaymentData): Promise<PaymentHistory> {
+		const response = await httpClient.post<PaymentResponse>(
+			`/subscriptions/${subscriptionId}/payments`,
+			data
+		);
+		return response.payment;
 	},
 
 	/**
 	 * 取得訂閱分析數據
 	 */
 	async getAnalytics(): Promise<AnalyticsData> {
-		await delay(400);
-
-		const activeSubscriptions = mockSubscriptions.filter((s) => s.status === 'active');
-
-		// 計算分類支出
-		const categoryMap = new Map<ServiceCategory, number>();
-		let totalMonthly = 0;
-
-		for (const sub of activeSubscriptions) {
-			const monthlyCost = toMonthlyCost(sub.cost, sub.billingCycle);
-			totalMonthly += monthlyCost;
-
-			const current = categoryMap.get(sub.category) || 0;
-			categoryMap.set(sub.category, current + monthlyCost);
-		}
-
-		const categoryBreakdown: CategorySpending[] = Array.from(categoryMap.entries()).map(
-			([category, amount]) => ({
-				category,
-				amount: Math.round(amount),
-				percentage: Math.round((amount / totalMonthly) * 100)
-			})
-		);
-
-		// 按金額排序
-		categoryBreakdown.sort((a, b) => b.amount - a.amount);
-
-		// 生成過去12個月的模擬趨勢數據
-		const monthlyTrend: MonthlySpending[] = [];
-		const now = new Date();
-
-		for (let i = 11; i >= 0; i--) {
-			const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-			const month = date.toISOString().slice(0, 7);
-
-			// 模擬數據：基礎值 + 隨機波動
-			const baseAmount = totalMonthly;
-			const variance = (Math.random() - 0.5) * baseAmount * 0.2; // ±10% 波動
-			const amount = Math.round(baseAmount + variance);
-
-			monthlyTrend.push({
-				month,
-				amount,
-				count: activeSubscriptions.length + Math.floor((Math.random() - 0.5) * 3)
-			});
-		}
-
-		return {
-			monthlyTrend,
-			categoryBreakdown,
-			yearlyProjection: Math.round(totalMonthly * 12),
-			averageMonthly: Math.round(totalMonthly)
-		};
+		const response = await httpClient.get<AnalyticsData>('/subscriptions/analytics');
+		return response;
 	},
 
 	/**
 	 * 取得日曆視圖數據
 	 */
 	async getCalendarData(year: number, month: number): Promise<CalendarDayData[]> {
-		await delay(300);
-
-		const activeSubscriptions = mockSubscriptions.filter((s) => s.status === 'active');
-		const calendarData: CalendarDayData[] = [];
-
-		// 取得該月的所有日期
-		const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-		for (let day = 1; day <= daysInMonth; day++) {
-			const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-
-			const subscriptionsOnDay = activeSubscriptions.filter((sub) => {
-				const billingDate = new Date(sub.nextBillingDate);
-				return billingDate.getDate() === day;
-			});
-
-			if (subscriptionsOnDay.length > 0) {
-				const totalAmount = subscriptionsOnDay.reduce((sum, sub) => sum + sub.cost, 0);
-				calendarData.push({
-					date: dateStr,
-					subscriptions: subscriptionsOnDay,
-					totalAmount
-				});
-			}
-		}
-
-		return calendarData;
+		const response = await httpClient.get<{ data: CalendarDayData[] }>(
+			`/subscriptions/calendar?year=${year}&month=${month + 1}`
+		);
+		return response.data;
 	},
 
 	/**
 	 * 批量匯入訂閱
 	 */
 	async importSubscriptions(data: CreateSubscriptionData[]): Promise<ImportResult> {
-		await delay(800);
-
 		let success = 0;
 		let failed = 0;
 		const errors: ImportResult['errors'] = [];
@@ -318,31 +190,7 @@ export const subscriptionsApi = {
 		for (let i = 0; i < data.length; i++) {
 			const item = data[i];
 			try {
-				// 驗證必填欄位
-				if (!item.name || !item.cost || !item.nextBillingDate) {
-					throw new Error('缺少必填欄位');
-				}
-
-				const newSubscription: Subscription = {
-					id: String(mockSubscriptions.length + success + 1),
-					name: item.name,
-					category: item.category,
-					cost: item.cost,
-					currency: item.currency || 'TWD',
-					billingCycle: item.billingCycle,
-					nextBillingDate: item.nextBillingDate,
-					status: item.status || 'active',
-					description: item.description,
-					website: item.website,
-					accountEmail: item.accountEmail,
-					paymentMethod: item.paymentMethod,
-					autoRenew: item.autoRenew ?? true,
-					reminderDays: item.reminderDays,
-					startDate: item.startDate || new Date().toISOString().split('T')[0],
-					createdAt: new Date().toISOString(),
-					updatedAt: new Date().toISOString()
-				};
-				mockSubscriptions.push(newSubscription);
+				await this.createSubscription(item);
 				success++;
 			} catch (error) {
 				failed++;
@@ -366,8 +214,8 @@ export const subscriptionsApi = {
 	 * 取得所有訂閱名稱 (用於重複檢測)
 	 */
 	async getSubscriptionNames(): Promise<string[]> {
-		await delay(100);
-		return mockSubscriptions.map((s) => s.name);
+		const { data: subscriptions } = await this.getSubscriptions({ pageSize: 100 });
+		return subscriptions.map((s) => s.name);
 	}
 };
 
@@ -388,6 +236,7 @@ export interface CategorySpending {
 	category: ServiceCategory;
 	amount: number;
 	percentage: number;
+	count?: number;
 }
 
 export interface AnalyticsData {
@@ -408,4 +257,12 @@ export interface ImportResult {
 	failed: number;
 	duplicates: number;
 	errors: { row: number; field: string; message: string }[];
+}
+
+export interface CreatePaymentData {
+	amount?: number;
+	currency?: string;
+	paidAt?: string;
+	status?: 'paid' | 'failed' | 'pending';
+	note?: string;
 }

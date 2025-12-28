@@ -10,7 +10,8 @@ export default defineConfig({
 		host: true,
 		proxy: {
 			'/api': {
-				target: 'http://localhost:8080',
+				// Docker 環境使用 http://php:80，本地開發使用 http://localhost:80
+				target: process.env.API_URL || 'http://php:80',
 				changeOrigin: true,
 				rewrite: (path) => path.replace(/^\/api/, '')
 			}

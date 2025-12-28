@@ -17,6 +17,8 @@ export interface User {
 	passwordChangedAt?: string;
 	twoFactorEnabled?: boolean;
 	twoFactorSecret?: string;
+	// 超級管理員（不可刪除）
+	isSuperAdmin?: boolean;
 }
 
 // 登入裝置/Session
@@ -164,6 +166,8 @@ export interface PaymentHistory {
 	currency: string;
 	paidAt: string;
 	status: 'paid' | 'failed' | 'pending';
+	note?: string;
+	createdAt: string;
 }
 
 export interface CreateSubscriptionData {

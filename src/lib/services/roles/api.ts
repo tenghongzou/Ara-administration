@@ -3,157 +3,163 @@
  */
 
 import type { Role, CreateRoleData, UpdateRoleData, PaginatedData } from '$lib/types';
-import { mockRoles, mockUsers } from '../mock-data';
-import { type Permission, allPermissions } from '$lib/permissions';
-import { delay, createPaginatedResponse, filterBySearch } from '../core';
+import { httpClient, HttpError } from '../core/http-client';
 
 export interface GetRolesParams {
 	page?: number;
 	pageSize?: number;
 	search?: string;
+	sortBy?: string;
+	sortDirection?: 'asc' | 'desc';
+}
+
+interface RolesResponse {
+	data: Role[];
+	pagination: {
+		page: number;
+		pageSize: number;
+		total: number;
+		totalPages: number;
+	};
+}
+
+interface RoleResponse {
+	role: Role;
+}
+
+export interface PermissionGroup {
+	key: string;
+	label: string;
+	permissions: Permission[];
+}
+
+export interface Permission {
+	id: string;
+	key: string;
+	label: string;
+	groupKey: string;
+	groupLabel: string;
 }
 
 export const rolesApi = {
 	async getRoles(params: GetRolesParams = {}): Promise<PaginatedData<Role>> {
-		await delay(400);
+		const searchParams = new URLSearchParams();
 
-		const { page = 1, pageSize = 50, search } = params;
+		if (params.page) searchParams.set('page', String(params.page));
+		if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
+		if (params.search) searchParams.set('search', params.search);
+		if (params.sortBy) searchParams.set('sortBy', params.sortBy);
+		if (params.sortDirection) searchParams.set('sortDirection', params.sortDirection);
 
-		let filtered = mockRoles.map((role) => ({
-			...role,
-			userCount: mockUsers.filter((u) => u.role === role.key).length
-		}));
+		const query = searchParams.toString();
+		const response = await httpClient.get<RolesResponse>(`/roles${query ? `?${query}` : ''}`);
 
-		// 搜尋過濾
-		if (search) {
-			const searchLower = search.toLowerCase();
-			filtered = filtered.filter(
-				(role) =>
-					role.label.toLowerCase().includes(searchLower) ||
-					role.key.toLowerCase().includes(searchLower) ||
-					role.description.toLowerCase().includes(searchLower)
-			);
-		}
-
-		return createPaginatedResponse(filtered, filtered, page, pageSize);
+		return {
+			data: response.data,
+			pagination: response.pagination
+		};
 	},
 
 	async getRole(id: string): Promise<Role> {
-		await delay(300);
-
-		const role = mockRoles.find((r) => r.id === id || r.key === id);
-		if (!role) throw new Error('角色不存在');
-
-		return {
-			...role,
-			userCount: mockUsers.filter((u) => u.role === role.key).length
-		};
+		try {
+			const response = await httpClient.get<RoleResponse>(`/roles/${id}`);
+			return response.role;
+		} catch (error) {
+			if (error instanceof HttpError && error.status === 404) {
+				throw new Error('角色不存在');
+			}
+			throw error;
+		}
 	},
 
 	async getRoleByKey(key: string): Promise<Role | null> {
-		await delay(200);
-		const role = mockRoles.find((r) => r.key === key);
-		if (!role) return null;
-		return {
-			...role,
-			userCount: mockUsers.filter((u) => u.role === role.key).length
-		};
+		try {
+			const response = await httpClient.get<RoleResponse>(`/roles/${key}`);
+			return response.role;
+		} catch (error) {
+			if (error instanceof HttpError && error.status === 404) {
+				return null;
+			}
+			throw error;
+		}
 	},
 
 	async createRole(data: CreateRoleData): Promise<Role> {
-		await delay(600);
-
-		// 檢查 key 是否重複
-		if (mockRoles.some((r) => r.key === data.key)) {
-			throw new Error('角色識別碼已存在');
+		try {
+			const response = await httpClient.post<RoleResponse>('/roles', data);
+			return response.role;
+		} catch (error) {
+			if (error instanceof HttpError) {
+				const errorMessages: Record<string, string> = {
+					'Role key already exists': '角色識別碼已存在',
+					'Fields key and label are required': '角色識別碼和名稱為必填'
+				};
+				throw new Error(errorMessages[error.error] || error.error);
+			}
+			throw error;
 		}
-
-		// 驗證權限
-		const validPermissions = data.permissions.filter((p) =>
-			allPermissions.includes(p as Permission)
-		);
-
-		const now = new Date().toISOString();
-		const newRole: Role = {
-			id: String(Date.now()),
-			key: data.key,
-			label: data.label,
-			description: data.description,
-			color: data.color || 'gray',
-			permissions: validPermissions,
-			isSystem: false,
-			userCount: 0,
-			createdAt: now,
-			updatedAt: now
-		};
-
-		mockRoles.push(newRole);
-		return newRole;
 	},
 
 	async updateRole(id: string, data: UpdateRoleData): Promise<Role> {
-		await delay(500);
-
-		const index = mockRoles.findIndex((r) => r.id === id || r.key === id);
-		if (index === -1) throw new Error('角色不存在');
-
-		const role = mockRoles[index];
-
-		// 系統角色只能修改權限，不能修改名稱等
-		if (role.isSystem && role.key === 'admin') {
-			throw new Error('無法修改系統管理員角色');
+		try {
+			const response = await httpClient.patch<RoleResponse>(`/roles/${id}`, data);
+			return response.role;
+		} catch (error) {
+			if (error instanceof HttpError) {
+				if (error.status === 404) {
+					throw new Error('角色不存在');
+				}
+				const errorMessages: Record<string, string> = {
+					'Role key already exists': '角色識別碼已存在',
+					'Cannot change key of system role': '無法修改系統角色的識別碼'
+				};
+				throw new Error(errorMessages[error.error] || error.error);
+			}
+			throw error;
 		}
-
-		// 驗證權限
-		let permissions = role.permissions;
-		if (data.permissions) {
-			permissions = data.permissions.filter((p) =>
-				allPermissions.includes(p as Permission)
-			);
-		}
-
-		mockRoles[index] = {
-			...role,
-			label: data.label ?? role.label,
-			description: data.description ?? role.description,
-			color: data.color ?? role.color,
-			permissions,
-			updatedAt: new Date().toISOString()
-		};
-
-		return {
-			...mockRoles[index],
-			userCount: mockUsers.filter((u) => u.role === role.key).length
-		};
 	},
 
 	async deleteRole(id: string): Promise<void> {
-		await delay(400);
-
-		const index = mockRoles.findIndex((r) => r.id === id || r.key === id);
-		if (index === -1) throw new Error('角色不存在');
-
-		const role = mockRoles[index];
-
-		if (role.isSystem) {
-			throw new Error('無法刪除系統內建角色');
+		try {
+			await httpClient.delete(`/roles/${id}`);
+		} catch (error) {
+			if (error instanceof HttpError) {
+				if (error.status === 404) {
+					throw new Error('角色不存在');
+				}
+				if (error.error.includes('system role')) {
+					throw new Error('無法刪除系統內建角色');
+				}
+				if (error.error.includes('assigned users')) {
+					throw new Error('無法刪除：有使用者正在使用此角色，請先重新分配');
+				}
+			}
+			throw error;
 		}
-
-		// 檢查是否有使用者正在使用此角色
-		const usersWithRole = mockUsers.filter((u) => u.role === role.key);
-		if (usersWithRole.length > 0) {
-			throw new Error(`無法刪除：有 ${usersWithRole.length} 位使用者正在使用此角色`);
-		}
-
-		mockRoles.splice(index, 1);
 	},
 
 	async getRolePermissions(roleKey: string): Promise<string[]> {
-		await delay(200);
+		try {
+			const response = await httpClient.get<RoleResponse>(`/roles/${roleKey}`);
+			return response.role.permissions;
+		} catch {
+			return [];
+		}
+	},
 
-		const role = mockRoles.find((r) => r.key === roleKey);
-		if (!role) return [];
+	/**
+	 * 獲取所有權限（按分組）
+	 */
+	async getPermissions(): Promise<PermissionGroup[]> {
+		const response = await httpClient.get<{ data: PermissionGroup[] }>('/permissions');
+		return response.data;
+	},
 
-		return [...role.permissions];
+	/**
+	 * 獲取所有權限（扁平列表）
+	 */
+	async getPermissionsFlat(): Promise<Permission[]> {
+		const response = await httpClient.get<{ data: Permission[] }>('/permissions/flat');
+		return response.data;
 	}
 };

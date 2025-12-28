@@ -3,8 +3,7 @@
  */
 
 import type { User, PaginatedData } from '$lib/types';
-import { mockUsers } from '../mock-data';
-import { delay, createPaginatedResponse, sortByField, filterBySearch } from '../core';
+import { httpClient, HttpError } from '../core/http-client';
 
 export interface GetUsersParams {
 	page?: number;
@@ -16,73 +15,166 @@ export interface GetUsersParams {
 	sortDirection?: 'asc' | 'desc';
 }
 
+export interface CreateUserData {
+	username: string;
+	email: string;
+	name: string;
+	password: string;
+	role: string;
+	status?: string;
+	phone?: string;
+	bio?: string;
+	avatar?: string;
+	birthday?: string;
+}
+
+export interface UpdateUserData {
+	username?: string;
+	email?: string;
+	name?: string;
+	role?: string;
+	status?: string;
+	phone?: string;
+	bio?: string;
+	avatar?: string;
+	birthday?: string;
+}
+
+interface UsersResponse {
+	data: User[];
+	pagination: {
+		page: number;
+		pageSize: number;
+		total: number;
+		totalPages: number;
+	};
+}
+
+interface UserResponse {
+	user: User;
+}
+
 export const usersApi = {
 	async getUsers(params: GetUsersParams = {}): Promise<PaginatedData<User>> {
-		await delay(600);
+		const searchParams = new URLSearchParams();
 
-		const { page = 1, pageSize = 10, search, role, status, sortBy, sortDirection = 'asc' } = params;
+		if (params.page) searchParams.set('page', String(params.page));
+		if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
+		if (params.search) searchParams.set('search', params.search);
+		if (params.role) searchParams.set('role', params.role);
+		if (params.status) searchParams.set('status', params.status);
+		if (params.sortBy) searchParams.set('sortBy', params.sortBy);
+		if (params.sortDirection) searchParams.set('sortDirection', params.sortDirection);
 
-		let filtered = [...mockUsers];
+		const query = searchParams.toString();
+		const response = await httpClient.get<UsersResponse>(`/users${query ? `?${query}` : ''}`);
 
-		// 搜尋過濾
-		filtered = filterBySearch(filtered, search, ['name', 'email']);
-
-		// 角色過濾
-		if (role) {
-			filtered = filtered.filter((user) => user.role === role);
-		}
-
-		// 狀態過濾
-		if (status) {
-			filtered = filtered.filter((user) => user.status === status);
-		}
-
-		// 排序
-		filtered = sortByField(filtered, sortBy, sortDirection);
-
-		return createPaginatedResponse(mockUsers, filtered, page, pageSize);
+		return {
+			data: response.data,
+			pagination: response.pagination
+		};
 	},
 
 	async getUser(id: string): Promise<User> {
-		await delay(400);
-		const user = mockUsers.find((u) => u.id === id);
-		if (!user) throw new Error('使用者不存在');
-		return user;
+		try {
+			const response = await httpClient.get<UserResponse>(`/users/${id}`);
+			return response.user;
+		} catch (error) {
+			if (error instanceof HttpError && error.status === 404) {
+				throw new Error('使用者不存在');
+			}
+			throw error;
+		}
 	},
 
-	async createUser(data: Partial<User>): Promise<User> {
-		await delay(600);
-		const newUser: User = {
-			id: String(mockUsers.length + 1),
-			username: data.username || data.email?.split('@')[0] || '',
-			email: data.email || '',
-			name: data.name || '',
-			role: data.role || 'viewer',
-			status: 'pending',
-			createdAt: new Date().toISOString(),
-			updatedAt: new Date().toISOString()
-		};
-		mockUsers.push(newUser);
-		return newUser;
+	async createUser(data: CreateUserData): Promise<User> {
+		try {
+			const response = await httpClient.post<UserResponse>('/users', data);
+			return response.user;
+		} catch (error) {
+			if (error instanceof HttpError) {
+				const errorMessages: Record<string, string> = {
+					'Username already exists': '使用者名稱已存在',
+					'Email already exists': '電子郵件已被使用',
+					'Role not found': '角色不存在'
+				};
+				throw new Error(errorMessages[error.error] || error.error);
+			}
+			throw error;
+		}
 	},
 
-	async updateUser(id: string, data: Partial<User>): Promise<User> {
-		await delay(500);
-		const index = mockUsers.findIndex((u) => u.id === id);
-		if (index === -1) throw new Error('使用者不存在');
-
-		mockUsers[index] = {
-			...mockUsers[index],
-			...data,
-			updatedAt: new Date().toISOString()
-		};
-		return mockUsers[index];
+	async updateUser(id: string, data: UpdateUserData): Promise<User> {
+		try {
+			const response = await httpClient.patch<UserResponse>(`/users/${id}`, data);
+			return response.user;
+		} catch (error) {
+			if (error instanceof HttpError) {
+				if (error.status === 404) {
+					throw new Error('使用者不存在');
+				}
+				const errorMessages: Record<string, string> = {
+					'Username already exists': '使用者名稱已存在',
+					'Email already exists': '電子郵件已被使用',
+					'Role not found': '角色不存在',
+					'Invalid status': '無效的狀態'
+				};
+				throw new Error(errorMessages[error.error] || error.error);
+			}
+			throw error;
+		}
 	},
 
 	async deleteUser(id: string): Promise<void> {
-		await delay(400);
-		const index = mockUsers.findIndex((u) => u.id === id);
-		if (index === -1) throw new Error('使用者不存在');
-		mockUsers.splice(index, 1);
+		try {
+			await httpClient.delete(`/users/${id}`);
+		} catch (error) {
+			if (error instanceof HttpError) {
+				if (error.status === 404) {
+					throw new Error('使用者不存在');
+				}
+				if (error.error.includes('super admin')) {
+					throw new Error('無法刪除超級管理員帳號');
+				}
+				if (error.error.includes('own account')) {
+					throw new Error('無法刪除自己的帳號');
+				}
+			}
+			throw error;
+		}
+	},
+
+	async changePassword(
+		id: string,
+		currentPassword: string | null,
+		newPassword: string
+	): Promise<void> {
+		try {
+			await httpClient.post(`/users/${id}/change-password`, {
+				currentPassword,
+				newPassword
+			});
+		} catch (error) {
+			if (error instanceof HttpError) {
+				if (error.error.includes('Current password')) {
+					throw new Error('目前密碼錯誤');
+				}
+				if (error.error.includes('at least')) {
+					throw new Error('新密碼至少需要 6 個字元');
+				}
+			}
+			throw error;
+		}
+	},
+
+	async uploadAvatar(id: string, file: File): Promise<string> {
+		const formData = new FormData();
+		formData.append('avatar', file);
+
+		const response = await httpClient.upload<{ avatarUrl: string }>(
+			`/users/${id}/avatar`,
+			formData
+		);
+		return response.avatarUrl;
 	}
 };
