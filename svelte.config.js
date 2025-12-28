@@ -11,7 +11,7 @@ const config = {
 			assets: 'build',
 			fallback: 'index.html',
 			precompress: true,
-			strict: true
+			strict: false // SPA 模式不需要嚴格檢查
 		}),
 
 		// 強制使用絕對路徑，避免 SSG 預渲染頁面的相對路徑問題

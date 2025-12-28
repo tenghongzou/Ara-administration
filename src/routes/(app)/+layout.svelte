@@ -31,6 +31,13 @@
 		return unsubscribe;
 	});
 
+	// 調試：追蹤路由變化
+	$effect(() => {
+		if (browser) {
+			console.log('[Layout] Route changed to:', $page.url.pathname);
+		}
+	});
+
 	// Route guard: redirect to login if not authenticated
 	$effect(() => {
 		if (browser && initialized && !authenticated) {
