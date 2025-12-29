@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto, afterNavigate } from '$app/navigation';
-	import { page } from '$app/stores';
 	import { browser } from '$app/environment';
 	import { Sidebar, Header } from '$lib/components/layout';
 	import { Toast, Spinner } from '$lib/components/ui';
@@ -31,32 +30,24 @@
 		return unsubscribe;
 	});
 
-	// 調試：使用 afterNavigate 追蹤導航
+	// Route permission guard: 在導航完成後檢查權限
 	afterNavigate((navigation) => {
-		console.log('[Layout] afterNavigate:', {
-			from: navigation.from?.url.pathname,
-			to: navigation.to?.url.pathname,
-			type: navigation.type
-		});
+		if (!browser || !initialized || !authenticated) return;
+
+		const pathname = navigation.to?.url.pathname;
+		if (!pathname) return;
+
+		const requiredPermissions = getRoutePermissions(pathname);
+		if (requiredPermissions.length > 0 && !hasAnyPermission(requiredPermissions)) {
+			toast.error('您沒有權限訪問此頁面');
+			goto('/dashboard');
+		}
 	});
 
 	// Route guard: redirect to login if not authenticated
 	$effect(() => {
 		if (browser && initialized && !authenticated) {
 			goto('/login');
-		}
-	});
-
-	// Route permission guard: check if user has required permissions
-	$effect(() => {
-		if (browser && initialized && authenticated) {
-			const pathname = $page.url.pathname;
-			const requiredPermissions = getRoutePermissions(pathname);
-
-			if (requiredPermissions.length > 0 && !hasAnyPermission(requiredPermissions)) {
-				toast.error('您沒有權限訪問此頁面');
-				goto('/dashboard');
-			}
 		}
 	});
 
@@ -170,9 +161,7 @@
 
 		<main class="lg:ml-64 pt-16 flex-1 overflow-hidden flex flex-col">
 			<div class="flex-1 overflow-auto min-h-0">
-				{#key $page.url.pathname}
-					{@render children()}
-				{/key}
+				{@render children()}
 			</div>
 		</main>
 

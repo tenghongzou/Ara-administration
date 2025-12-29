@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { untrack } from 'svelte';
 	import { config } from '$lib/constants';
 	import { subscriptionsApi } from '$lib/services';
 	import type { Subscription, PaymentHistory } from '$lib/types';
@@ -21,8 +21,7 @@
 	let formData = $state<SubscriptionFormData>(subscriptionsService.createEmptyFormData());
 	let errors = $state<SubscriptionFormErrors>({});
 
-	async function loadSubscription() {
-		const subscriptionId = $page.params.id;
+	async function loadSubscription(subscriptionId: string) {
 		if (!subscriptionId) {
 			goto('/subscriptions');
 			return;
@@ -45,8 +44,14 @@
 		}
 	}
 
-	onMount(() => {
-		loadSubscription();
+	// 監聽 id 變化，使用 untrack 避免追蹤內部 state 變化
+	$effect(() => {
+		const id = $page.params.id;
+		untrack(() => {
+			if (id) {
+				loadSubscription(id);
+			}
+		});
 	});
 
 	async function handleSubmit(data: SubscriptionFormData) {
