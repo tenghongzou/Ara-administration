@@ -30,9 +30,11 @@
 
 		try {
 			const response = await authApi.login({ account, password });
-			// 獲取用戶權限
+			// 先儲存 token，再獲取權限
+			auth.setUser(response.user, response.token, []);
+			// 現在 token 已儲存，可以獲取權限
 			const permissions = await authApi.getPermissions();
-			auth.setUser(response.user, response.token, permissions);
+			auth.setPermissions(permissions);
 			toast.success('登入成功');
 			goto('/dashboard');
 		} catch (err) {
