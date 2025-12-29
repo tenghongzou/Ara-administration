@@ -105,10 +105,5 @@
 				{#snippet children()}{loading ? '登入中...' : '登入'}{/snippet}
 			</Button>
 		</div>
-
-		<div class="text-center text-sm text-gray-500 dark:text-gray-400">
-			<p>測試帳號：admin 或 admin@example.com</p>
-			<p>測試密碼：admin123</p>
-		</div>
 	</form>
 </div>
