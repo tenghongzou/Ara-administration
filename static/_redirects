@@ -1,1 +1,5 @@
+# 靜態資源不重定向（Cloudflare 會自動處理）
+/_app/*  /_app/:splat  200
+
+# SPA fallback - 只對 HTML 頁面請求生效
 /*    /index.html   200

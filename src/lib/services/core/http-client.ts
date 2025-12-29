@@ -4,8 +4,9 @@
  */
 
 import { browser } from '$app/environment';
+import { config } from '$lib/constants/config';
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = config.apiBaseUrl;
 
 export interface ApiError {
 	error: string;

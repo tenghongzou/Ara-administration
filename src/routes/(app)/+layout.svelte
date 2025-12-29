@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, afterNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { browser } from '$app/environment';
 	import { Sidebar, Header } from '$lib/components/layout';
@@ -31,11 +31,13 @@
 		return unsubscribe;
 	});
 
-	// 調試：追蹤路由變化
-	$effect(() => {
-		if (browser) {
-			console.log('[Layout] Route changed to:', $page.url.pathname);
-		}
+	// 調試：使用 afterNavigate 追蹤導航
+	afterNavigate((navigation) => {
+		console.log('[Layout] afterNavigate:', {
+			from: navigation.from?.url.pathname,
+			to: navigation.to?.url.pathname,
+			type: navigation.type
+		});
 	});
 
 	// Route guard: redirect to login if not authenticated
