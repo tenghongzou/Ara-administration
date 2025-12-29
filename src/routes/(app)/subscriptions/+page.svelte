@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { config } from '$lib/constants';
 	import {
 		subscriptionsApi,
@@ -159,7 +160,7 @@
 		toast.success(`已匯出 ${dataToExport.length} 筆訂閱資料`);
 	}
 
-	$effect(() => {
+	onMount(() => {
 		loadSubscriptions();
 	});
 </script>

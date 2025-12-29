@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { config } from '$lib/constants';
 	import { subscriptionsApi } from '$lib/services';
 	import type { Subscription } from '$lib/types';
@@ -30,7 +31,7 @@
 		}
 	}
 
-	$effect(() => {
+	onMount(() => {
 		loadCalendarData();
 	});
 

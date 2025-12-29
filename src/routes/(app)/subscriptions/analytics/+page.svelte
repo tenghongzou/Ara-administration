@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { config } from '$lib/constants';
 	import { subscriptionsApi } from '$lib/services';
 	import { toast } from '$lib/stores/toast';
@@ -18,7 +19,7 @@
 		}
 	}
 
-	$effect(() => {
+	onMount(() => {
 		loadData();
 	});
 </script>
