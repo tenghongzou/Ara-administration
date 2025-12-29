@@ -60,9 +60,15 @@ export const subscriptionsApi = {
 			`/subscriptions${query ? `?${query}` : ''}`
 		);
 
+		// 確保空資料時也返回正確格式，不拋出錯誤
 		return {
-			data: response.data,
-			pagination: response.pagination
+			data: response.data || [],
+			pagination: response.pagination || {
+				page: params.page || 1,
+				pageSize: params.pageSize || 10,
+				total: 0,
+				totalPages: 0
+			}
 		};
 	},
 
@@ -120,14 +126,20 @@ export const subscriptionsApi = {
 
 	async getStatistics(): Promise<SubscriptionStats> {
 		const response = await httpClient.get<SubscriptionStats>('/subscriptions/stats');
-		return response;
+		// 確保空資料時也返回正確格式
+		return {
+			totalMonthly: response.totalMonthly ?? 0,
+			totalYearly: response.totalYearly ?? 0,
+			upcomingCount: response.upcomingCount ?? 0,
+			activeCount: response.activeCount ?? 0
+		};
 	},
 
 	async getUpcoming(days: number = 7): Promise<Subscription[]> {
 		const response = await httpClient.get<{ data: Subscription[] }>(
 			`/subscriptions/upcoming?days=${days}`
 		);
-		return response.data;
+		return response.data || [];
 	},
 
 	/**
@@ -137,7 +149,7 @@ export const subscriptionsApi = {
 		const response = await httpClient.get<{ data: UpcomingReminder[] }>(
 			`/subscriptions/reminders?days=${days}`
 		);
-		return response.data;
+		return response.data || [];
 	},
 
 	/**
@@ -147,7 +159,7 @@ export const subscriptionsApi = {
 		const response = await httpClient.get<{ data: PaymentHistory[] }>(
 			`/subscriptions/${subscriptionId}/payments`
 		);
-		return response.data;
+		return response.data || [];
 	},
 
 	/**
@@ -166,7 +178,13 @@ export const subscriptionsApi = {
 	 */
 	async getAnalytics(): Promise<AnalyticsData> {
 		const response = await httpClient.get<AnalyticsData>('/subscriptions/analytics');
-		return response;
+		// 確保空資料時也返回正確格式
+		return {
+			monthlyTrend: response.monthlyTrend || [],
+			categoryBreakdown: response.categoryBreakdown || [],
+			yearlyProjection: response.yearlyProjection ?? 0,
+			averageMonthly: response.averageMonthly ?? 0
+		};
 	},
 
 	/**
@@ -176,7 +194,7 @@ export const subscriptionsApi = {
 		const response = await httpClient.get<{ data: CalendarDayData[] }>(
 			`/subscriptions/calendar?year=${year}&month=${month + 1}`
 		);
-		return response.data;
+		return response.data || [];
 	},
 
 	/**
