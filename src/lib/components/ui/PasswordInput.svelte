@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '$lib/utils';
+	import { cn, generateUUID } from '$lib/utils';
 
 	interface Props {
 		name?: string;
@@ -42,7 +42,7 @@
 	}: Props = $props();
 
 	let showPassword = $state(false);
-	let inputId = $derived(id || name || crypto.randomUUID());
+	let inputId = $derived(id || name || generateUUID());
 
 	// Password strength calculation
 	let strength = $derived.by(() => {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '$lib/utils';
+	import { cn, generateUUID } from '$lib/utils';
 
 	interface Props {
 		name?: string;
@@ -23,7 +23,7 @@
 		onchange
 	}: Props = $props();
 
-	let checkboxId = $derived(id || name || crypto.randomUUID());
+	let checkboxId = $derived(id || name || generateUUID());
 
 	const checkboxStyles = `
 		h-4 w-4 rounded

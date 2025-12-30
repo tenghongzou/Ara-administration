@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '$lib/utils';
+	import { cn, generateUUID } from '$lib/utils';
 	import dayjs from 'dayjs';
 
 	interface Props {
@@ -38,7 +38,7 @@
 	let currentMonth = $state(value ? dayjs(value) : dayjs());
 	let inputRef: HTMLInputElement;
 
-	const inputId = $derived(id || name || crypto.randomUUID());
+	const inputId = $derived(id || name || generateUUID());
 
 	const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
 

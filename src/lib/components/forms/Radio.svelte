@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '$lib/utils';
+	import { cn, generateUUID } from '$lib/utils';
 
 	interface Option {
 		value: string;
@@ -34,7 +34,7 @@
 		onchange
 	}: Props = $props();
 
-	const groupId = crypto.randomUUID();
+	const groupId = generateUUID();
 
 	function handleChange(optionValue: string) {
 		if (disabled) return;

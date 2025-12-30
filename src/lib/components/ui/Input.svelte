@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '$lib/utils';
+	import { cn, generateUUID } from '$lib/utils';
 
 	interface Props {
 		type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date';
@@ -47,7 +47,7 @@
 		onblur
 	}: Props = $props();
 
-	let inputId = $derived(id || name || crypto.randomUUID());
+	let inputId = $derived(id || name || generateUUID());
 
 	const baseInputStyles = `
 		w-full px-3 py-2

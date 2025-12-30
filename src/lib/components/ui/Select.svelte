@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '$lib/utils';
+	import { cn, generateUUID } from '$lib/utils';
 
 	interface Option {
 		value: string;
@@ -35,7 +35,7 @@
 		onchange
 	}: Props = $props();
 
-	let selectId = $derived(id || name || crypto.randomUUID());
+	let selectId = $derived(id || name || generateUUID());
 
 	const baseStyles = `
 		w-full px-3 py-2 pr-10

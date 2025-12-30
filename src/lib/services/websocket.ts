@@ -15,7 +15,7 @@ export interface WebSocketMessage<T = unknown> {
 	timestamp?: string;
 }
 
-// 通知訊息 payload
+// 通知訊息 payload（前端內部使用格式）
 export interface NotificationPayload {
 	type: 'info' | 'success' | 'warning' | 'error';
 	title: string;
@@ -25,6 +25,28 @@ export interface NotificationPayload {
 	category?: NotificationType;
 	/** 是否為緊急通知（靜音時段內仍會顯示） */
 	urgent?: boolean;
+}
+
+// 後端 Notification Service 發送的格式
+export interface ServerNotificationEvent {
+	id: string;
+	occurred_at: string;
+	event_type: string;
+	payload: {
+		type?: 'info' | 'success' | 'warning' | 'error';
+		title?: string;
+		message?: string;
+		link?: string;
+		category?: NotificationType;
+		urgent?: boolean;
+		[key: string]: unknown;
+	};
+	metadata: {
+		source: string;
+		priority: 'Low' | 'Normal' | 'High' | 'Critical';
+		ttl?: number;
+		correlation_id?: string;
+	};
 }
 
 // WebSocket 配置
@@ -211,8 +233,8 @@ function createWebSocketService() {
 
 	function handleMessage(event: MessageEvent) {
 		try {
-			const message: WebSocketMessage = JSON.parse(event.data);
-			log('Received:', message.type, message.payload);
+			const message = JSON.parse(event.data);
+			log('Received:', message.type, message);
 
 			// 處理心跳回應
 			if (message.type === 'pong') {
@@ -220,25 +242,44 @@ function createWebSocketService() {
 				return;
 			}
 
-			// 處理內建訊息類型
+			// 處理通知訊息（後端格式：type + flatten NotificationEvent）
 			if (message.type === 'notification') {
-				handleNotification(message.payload as NotificationPayload);
+				handleServerNotification(message as { type: 'notification' } & ServerNotificationEvent);
 			}
 
 			// 觸發訊息處理器
-			emit(message.type, message.payload, message);
+			emit(message.type, message.payload ?? message, message);
 		} catch (error) {
 			log('Failed to parse message:', event.data, error);
 		}
 	}
 
-	function handleNotification(payload: NotificationPayload) {
+	/**
+	 * 處理後端 Notification Service 發送的通知
+	 * 將 ServerNotificationEvent 格式轉換為前端 NotificationPayload 格式
+	 */
+	function handleServerNotification(event: { type: 'notification' } & ServerNotificationEvent) {
+		// 從後端 payload 中提取通知內容，或使用預設值
+		const payload = event.payload || {};
+
+		// 根據 priority 決定通知類型
+		const priorityToType: Record<string, 'info' | 'success' | 'warning' | 'error'> = {
+			Low: 'info',
+			Normal: 'info',
+			High: 'warning',
+			Critical: 'error'
+		};
+
+		const notificationType = payload.type || priorityToType[event.metadata?.priority] || 'info';
+		const title = payload.title || event.event_type || '系統通知';
+		const message = payload.message || (typeof payload === 'object' ? JSON.stringify(payload) : String(payload));
+
 		// 1. 添加到通知中心
 		notifications.add(
 			{
-				type: payload.type,
-				title: payload.title,
-				message: payload.message,
+				type: notificationType,
+				title,
+				message,
 				link: payload.link
 			},
 			{ source: 'remote' }
@@ -246,12 +287,12 @@ function createWebSocketService() {
 
 		// 2. 觸發即時推送（Toast、瀏覽器通知、音效）
 		pushNotificationService.push({
-			type: payload.type,
-			title: payload.title,
-			message: payload.message,
+			type: notificationType,
+			title,
+			message,
 			link: payload.link,
 			category: payload.category,
-			urgent: payload.urgent
+			urgent: payload.urgent || event.metadata?.priority === 'Critical'
 		});
 	}
 

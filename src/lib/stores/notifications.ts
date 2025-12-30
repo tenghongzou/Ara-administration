@@ -1,4 +1,5 @@
 import { writable, derived, get } from 'svelte/store';
+import { generateUUID } from '$lib/utils';
 
 export interface Notification {
 	id: string;
@@ -19,51 +20,9 @@ interface NotificationsState {
 	initialized: boolean;
 }
 
-// 初始 mock 資料 (開發用)
-const MOCK_NOTIFICATIONS: Notification[] = [
-	{
-		id: '1',
-		type: 'info',
-		title: '新使用者註冊',
-		message: '陳待審 已提交註冊申請，等待審核',
-		read: false,
-		timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-		link: '/users',
-		source: 'local'
-	},
-	{
-		id: '2',
-		type: 'warning',
-		title: '系統更新提醒',
-		message: '系統將於今晚 23:00 進行維護更新',
-		read: false,
-		timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-		source: 'local'
-	},
-	{
-		id: '3',
-		type: 'success',
-		title: '備份完成',
-		message: '每日自動備份已成功完成',
-		read: true,
-		timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
-		source: 'local'
-	},
-	{
-		id: '4',
-		type: 'error',
-		title: '登入異常',
-		message: '偵測到多次登入失敗嘗試',
-		read: true,
-		timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-		link: '/logs',
-		source: 'local'
-	}
-];
-
 function createNotificationsStore() {
 	const { subscribe, update, set } = writable<NotificationsState>({
-		items: MOCK_NOTIFICATIONS,
+		items: [],
 		isOpen: false,
 		initialized: false
 	});
@@ -112,7 +71,7 @@ function createNotificationsStore() {
 		) => {
 			const newNotification: Notification = {
 				...notification,
-				id: crypto.randomUUID(),
+				id: generateUUID(),
 				timestamp: new Date().toISOString(),
 				read: false,
 				source: options?.source || 'local'
@@ -171,7 +130,7 @@ function createNotificationsStore() {
 		 */
 		reset: () => {
 			set({
-				items: MOCK_NOTIFICATIONS,
+				items: [],
 				isOpen: false,
 				initialized: false
 			});

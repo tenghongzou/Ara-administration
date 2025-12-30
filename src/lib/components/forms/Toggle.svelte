@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '$lib/utils';
+	import { cn, generateUUID } from '$lib/utils';
 
 	interface Props {
 		checked?: boolean;
@@ -21,7 +21,7 @@
 		onchange
 	}: Props = $props();
 
-	const toggleId = crypto.randomUUID();
+	const toggleId = generateUUID();
 
 	function handleChange() {
 		if (disabled) return;

@@ -1,4 +1,5 @@
 import { writable } from 'svelte/store';
+import { generateUUID } from '$lib/utils';
 
 export interface ToastItem {
 	id: string;
@@ -11,7 +12,7 @@ function createToastStore() {
 	const { subscribe, update } = writable<ToastItem[]>([]);
 
 	function add(item: Omit<ToastItem, 'id'>) {
-		const id = crypto.randomUUID();
+		const id = generateUUID();
 		const toast: ToastItem = { ...item, id };
 
 		update((toasts) => [...toasts, toast]);
