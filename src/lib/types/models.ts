@@ -212,8 +212,8 @@ export interface SubscriptionFilters {
 }
 
 export interface SubscriptionStats {
-	totalMonthly: Record<string, number>;
-	totalYearly: Record<string, number>;
+	totalMonthly: number;
+	totalYearly: number;
 	upcomingCount: number;
 	activeCount: number;
 }

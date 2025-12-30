@@ -18,6 +18,7 @@
 
 	let selectedDate = $state<string | null>(null);
 	let selectedSubscriptions = $state<Subscription[]>([]);
+	let selectedTotalAmount = $state<number>(0);
 	let showModal = $state(false);
 
 	async function loadCalendarData() {
@@ -41,9 +42,10 @@
 		loadCalendarData();
 	}
 
-	function handleDayClick(date: string, subscriptions: Subscription[]) {
+	function handleDayClick(date: string, subscriptions: Subscription[], totalAmount: number) {
 		selectedDate = date;
 		selectedSubscriptions = subscriptions;
+		selectedTotalAmount = totalAmount;
 		showModal = true;
 	}
 </script>
@@ -72,5 +74,6 @@
 	bind:open={showModal}
 	date={selectedDate}
 	subscriptions={selectedSubscriptions}
+	totalAmount={selectedTotalAmount}
 	onClose={() => (showModal = false)}
 />

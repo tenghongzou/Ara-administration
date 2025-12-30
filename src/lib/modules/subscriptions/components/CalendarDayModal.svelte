@@ -8,22 +8,20 @@
 		open: boolean;
 		date: string | null;
 		subscriptions: Subscription[];
+		totalAmount?: number;
 		onClose: () => void;
 	}
 
-	let { open = $bindable(), date, subscriptions, onClose }: Props = $props();
+	let { open = $bindable(), date, subscriptions, totalAmount, onClose }: Props = $props();
 
-	let totalsByCurrency = $derived(
-		subscriptions.reduce(
-			(acc, s) => {
-				acc[s.currency] = (acc[s.currency] ?? 0) + s.cost;
-				return acc;
-			},
-			{} as Record<string, number>
-		)
+	// 計算總金額（使用後端傳回的 totalAmount 或前端計算）
+	let displayTotal = $derived(
+		totalAmount !== undefined
+			? subscriptionsService.formatCurrency(totalAmount)
+			: subscriptionsService.formatCurrency(
+					subscriptions.reduce((sum, s) => sum + s.cost, 0)
+				)
 	);
-
-	let formattedTotals = $derived(subscriptionsService.formatMultiCurrency(totalsByCurrency));
 </script>
 
 <Modal bind:open title={date ? subscriptionsService.formatFullDate(date) : ''} size="md" {onClose}>
@@ -34,12 +32,7 @@
 					class="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 pb-2 border-b border-gray-200 dark:border-gray-700"
 				>
 					<span>共 {subscriptions.length} 筆訂閱</span>
-					<span>
-						總計
-						{#each formattedTotals as total, i}
-							{#if i > 0} / {/if}{total}
-						{/each}
-					</span>
+					<span>總計 {displayTotal}</span>
 				</div>
 
 				{#each subscriptions as subscription}

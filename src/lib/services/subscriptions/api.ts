@@ -252,8 +252,8 @@ export interface MonthlySpending {
 
 export interface CategorySpending {
 	category: ServiceCategory;
-	amounts: Record<string, number>;
-	percentages: Record<string, number>;
+	amount: number;
+	percentage: number;
 	count?: number;
 }
 
@@ -267,7 +267,7 @@ export interface AnalyticsData {
 export interface CalendarDayData {
 	date: string;
 	subscriptions: Subscription[];
-	totalAmounts: Record<string, number>;
+	totalAmount: number;
 }
 
 export interface ImportResult {

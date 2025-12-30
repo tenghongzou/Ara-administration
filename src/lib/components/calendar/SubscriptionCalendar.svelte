@@ -9,7 +9,7 @@
 		month: number;
 		calendarData: CalendarDayData[];
 		onMonthChange?: (year: number, month: number) => void;
-		onDayClick?: (date: string, subscriptions: Subscription[]) => void;
+		onDayClick?: (date: string, subscriptions: Subscription[], totalAmount: number) => void;
 		class?: string;
 	}
 
@@ -88,42 +88,23 @@
 
 	function handleDayClick(day: ReturnType<typeof calendarGrid>[0]) {
 		if (day.date && day.data) {
-			onDayClick?.(day.dateStr, day.data.subscriptions);
+			onDayClick?.(day.dateStr, day.data.subscriptions, day.data.totalAmount);
 		}
 	}
 
-	// 計算所有幣值的總金額（用於顏色強度）
-	function getTotalAmount(amounts: Record<string, number>): number {
-		return Object.values(amounts).reduce((sum, val) => sum + val, 0);
-	}
-
-	// 格式化多幣值顯示（簡短版本）
-	function formatAmounts(amounts: Record<string, number>): string {
-		const entries = Object.entries(amounts);
-		if (entries.length === 0) return '-';
-		if (entries.length === 1) {
-			const [currency, amount] = entries[0];
-			return formatAmount(amount, currency);
-		}
-		// 多幣值時顯示主要幣值
-		const [currency, amount] = entries[0];
-		return formatAmount(amount, currency) + '+';
-	}
-
-	function formatAmount(amount: number, currency: string = 'TWD'): string {
-		const symbol = currency === 'TWD' ? '' : currency === 'USD' ? '$' : currency === 'EUR' ? '€' : currency === 'JPY' ? '¥' : '';
+	// 格式化金額顯示
+	function formatAmount(amount: number): string {
 		if (amount >= 1000) {
-			return symbol + (amount / 1000).toFixed(1) + 'k';
+			return (amount / 1000).toFixed(1) + 'k';
 		}
-		return symbol + amount.toString();
+		return amount.toString();
 	}
 
 	// 根據金額計算背景顏色強度
-	function getAmountIntensity(amounts: Record<string, number>): string {
-		const total = getTotalAmount(amounts);
-		if (total >= 2000) return 'bg-red-500/30 dark:bg-red-500/40';
-		if (total >= 1000) return 'bg-orange-500/30 dark:bg-orange-500/40';
-		if (total >= 500) return 'bg-yellow-500/30 dark:bg-yellow-500/40';
+	function getAmountIntensity(amount: number): string {
+		if (amount >= 2000) return 'bg-red-500/30 dark:bg-red-500/40';
+		if (amount >= 1000) return 'bg-orange-500/30 dark:bg-orange-500/40';
+		if (amount >= 500) return 'bg-yellow-500/30 dark:bg-yellow-500/40';
 		return 'bg-blue-500/20 dark:bg-blue-500/30';
 	}
 </script>
@@ -189,11 +170,11 @@
 						<div
 							class={cn(
 								'mt-1 px-1.5 py-1 rounded text-xs',
-								getAmountIntensity(day.data.totalAmounts)
+								getAmountIntensity(day.data.totalAmount)
 							)}
 						>
 							<div class="font-medium text-gray-800 dark:text-gray-200">
-								{formatAmounts(day.data.totalAmounts)}
+								${formatAmount(day.data.totalAmount)}
 							</div>
 							<div class="text-gray-600 dark:text-gray-400">
 								{day.data.subscriptions.length} 筆

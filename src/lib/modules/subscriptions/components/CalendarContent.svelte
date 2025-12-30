@@ -13,7 +13,7 @@
 		year: number;
 		month: number;
 		onMonthChange: (year: number, month: number) => void;
-		onDayClick: (date: string, subscriptions: Subscription[]) => void;
+		onDayClick: (date: string, subscriptions: Subscription[], totalAmount: number) => void;
 	}
 
 	let {
