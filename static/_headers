@@ -4,5 +4,13 @@
   X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
 
+# HTML 不快取，確保每次取得最新版本
+/*.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/index.html
+  Cache-Control: no-cache, no-store, must-revalidate
+
+# 靜態資源使用長期快取（檔名包含 hash）
 /_app/*
   Cache-Control: public, max-age=31536000, immutable
