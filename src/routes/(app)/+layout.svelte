@@ -101,11 +101,15 @@
 			// 訂閱 WebSocket 事件
 			const unsubscribeConnected = websocket.on('connected', () => {
 				console.log('[App] WebSocket connected');
-				// 連線成功後可請求歷史通知
-				websocket.send({
-					type: 'notifications:fetch',
-					payload: { limit: 50 }
-				});
+				// 連線成功後訂閱使用者專屬頻道
+				// Notification service 期望格式: {"type": "Subscribe", "payload": {"channels": [...]}}
+				const user = $currentUser;
+				if (user) {
+					websocket.send({
+						type: 'Subscribe',
+						payload: { channels: [`user:${user.id}`, 'broadcast'] }
+					});
+				}
 			});
 
 			const unsubscribeDisconnected = websocket.on('disconnected', (payload) => {

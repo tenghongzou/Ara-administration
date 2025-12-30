@@ -13,7 +13,17 @@
 
 	let { open = $bindable(), date, subscriptions, onClose }: Props = $props();
 
-	let totalCost = $derived(subscriptions.reduce((sum, s) => sum + s.cost, 0));
+	let totalsByCurrency = $derived(
+		subscriptions.reduce(
+			(acc, s) => {
+				acc[s.currency] = (acc[s.currency] ?? 0) + s.cost;
+				return acc;
+			},
+			{} as Record<string, number>
+		)
+	);
+
+	let formattedTotals = $derived(subscriptionsService.formatMultiCurrency(totalsByCurrency));
 </script>
 
 <Modal bind:open title={date ? subscriptionsService.formatFullDate(date) : ''} size="md" {onClose}>
@@ -25,7 +35,10 @@
 				>
 					<span>共 {subscriptions.length} 筆訂閱</span>
 					<span>
-						總計 {subscriptionsService.formatCurrency(totalCost)}
+						總計
+						{#each formattedTotals as total, i}
+							{#if i > 0} / {/if}{total}
+						{/each}
 					</span>
 				</div>
 

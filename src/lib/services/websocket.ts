@@ -113,7 +113,8 @@ function createWebSocketService() {
 		heartbeatTimer = setInterval(() => {
 			if (socket?.readyState === WebSocket.OPEN) {
 				log('Sending heartbeat ping');
-				send({ type: 'ping', payload: { timestamp: Date.now() } });
+				// Notification service 期望格式: {"type": "Ping"}
+				socket.send(JSON.stringify({ type: 'Ping' }));
 
 				// 設置心跳超時
 				heartbeatTimeoutTimer = setTimeout(() => {
@@ -315,10 +316,8 @@ function createWebSocketService() {
 		}
 
 		try {
-			const data = JSON.stringify({
-				...message,
-				timestamp: message.timestamp || new Date().toISOString()
-			});
+			// 發送原始訊息，不添加額外字段（notification service 使用 tagged enum）
+			const data = JSON.stringify(message);
 			socket.send(data);
 			log('Sent:', message.type);
 			return true;

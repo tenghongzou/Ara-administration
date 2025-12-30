@@ -53,8 +53,8 @@ export interface SubscriptionFormErrors {
 // ==================== 統計和分析 ====================
 
 export interface SubscriptionStatsDisplay {
-	totalMonthly: string;
-	totalYearly: string;
+	totalMonthly: string[];
+	totalYearly: string[];
 	upcomingCount: number;
 	activeCount: number;
 }
@@ -83,11 +83,11 @@ export interface AnalyticsData {
 export interface CalendarDayData {
 	date: string;
 	subscriptions: Subscription[];
-	totalAmount: number;
+	totalAmounts: Record<string, number>;
 }
 
 export interface CalendarStats {
-	monthlyTotal: number;
+	monthlyTotals: Record<string, number>;
 	monthlyCount: number;
 	daysWithPayments: number;
 }

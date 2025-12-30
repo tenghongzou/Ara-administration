@@ -35,9 +35,15 @@
 				</div>
 				<div>
 					<p class="text-sm text-gray-500 dark:text-gray-400">月費總計</p>
-					<p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-						{formatted.totalMonthly}
-					</p>
+					<div class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+						{#if formatted.totalMonthly.length === 0}
+							<span>-</span>
+						{:else}
+							{#each formatted.totalMonthly as amount, i}
+								<span class={i > 0 ? 'text-lg ml-2' : ''}>{amount}</span>
+							{/each}
+						{/if}
+					</div>
 				</div>
 			</div>
 		{/snippet}
@@ -65,9 +71,15 @@
 				</div>
 				<div>
 					<p class="text-sm text-gray-500 dark:text-gray-400">年費總計</p>
-					<p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-						{formatted.totalYearly}
-					</p>
+					<div class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+						{#if formatted.totalYearly.length === 0}
+							<span>-</span>
+						{:else}
+							{#each formatted.totalYearly as amount, i}
+								<span class={i > 0 ? 'text-lg ml-2' : ''}>{amount}</span>
+							{/each}
+						{/if}
+					</div>
 				</div>
 			</div>
 		{/snippet}

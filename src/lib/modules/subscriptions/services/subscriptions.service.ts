@@ -29,6 +29,15 @@ class SubscriptionsService {
 	}
 
 	/**
+	 * 格式化多幣值金額
+	 */
+	formatMultiCurrency(amounts: Record<string, number>): string[] {
+		return Object.entries(amounts).map(([currency, amount]) =>
+			this.formatCurrency(amount, currency)
+		);
+	}
+
+	/**
 	 * 格式化日期
 	 */
 	formatDate(dateString?: string): string {
@@ -57,8 +66,8 @@ class SubscriptionsService {
 	 */
 	formatStats(stats: SubscriptionStats): SubscriptionStatsDisplay {
 		return {
-			totalMonthly: this.formatCurrency(stats.totalMonthly),
-			totalYearly: this.formatCurrency(stats.totalYearly),
+			totalMonthly: this.formatMultiCurrency(stats.totalMonthly),
+			totalYearly: this.formatMultiCurrency(stats.totalYearly),
 			upcomingCount: stats.upcomingCount,
 			activeCount: stats.activeCount
 		};
@@ -109,8 +118,16 @@ class SubscriptionsService {
 	 * 計算日曆統計
 	 */
 	calculateCalendarStats(calendarData: CalendarDayData[]): CalendarStats {
+		const monthlyTotals: Record<string, number> = {};
+		
+		for (const day of calendarData) {
+			for (const [currency, amount] of Object.entries(day.totalAmounts)) {
+				monthlyTotals[currency] = (monthlyTotals[currency] ?? 0) + amount;
+			}
+		}
+
 		return {
-			monthlyTotal: calendarData.reduce((sum, day) => sum + day.totalAmount, 0),
+			monthlyTotals,
 			monthlyCount: calendarData.reduce((sum, day) => sum + day.subscriptions.length, 0),
 			daysWithPayments: calendarData.length
 		};
