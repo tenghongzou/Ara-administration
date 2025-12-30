@@ -29,17 +29,19 @@
 
 <Card variant="bordered">
 	{#snippet header()}
-		<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">分類支出詳情</h2>
+		<h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">分類支出詳情</h2>
 	{/snippet}
 	{#snippet children()}
-		<div class="grid gap-6 lg:grid-cols-2">
+		<div class="grid gap-4 sm:gap-6 lg:grid-cols-2">
 			<!-- Bar Chart -->
-			<div class="h-64">
+			<div class="h-48 sm:h-64 order-2 lg:order-1">
 				<BarChart data={barChartData} class="h-full" />
 			</div>
 
 			<!-- Category List -->
-			<CategoryBreakdown breakdown={categoryBreakdown} />
+			<div class="order-1 lg:order-2">
+				<CategoryBreakdown breakdown={categoryBreakdown} />
+			</div>
 		</div>
 	{/snippet}
 </Card>

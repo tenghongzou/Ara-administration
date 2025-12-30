@@ -44,20 +44,20 @@
 
 <div
 	class={cn(
-		'bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6',
+		'bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4 sm:p-6',
 		className
 	)}
 >
-	<div class="flex items-start justify-between">
-		<div class="flex-1">
-			<p class="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
-			<p class="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
+	<div class="flex items-start justify-between gap-2">
+		<div class="flex-1 min-w-0">
+			<p class="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{title}</p>
+			<p class="mt-1 sm:mt-2 text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 truncate">{value}</p>
 
 			{#if change !== undefined}
-				<div class="mt-2 flex items-center gap-1 text-sm">
+				<div class="mt-1 sm:mt-2 flex items-center gap-1 text-xs sm:text-sm">
 					<span class={changeColor()}>
 						{#if changeDirection === 'up'}
-							<svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="w-3 h-3 sm:w-4 sm:h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path
 									stroke-linecap="round"
 									stroke-linejoin="round"
@@ -67,7 +67,7 @@
 							</svg>
 							+{change}%
 						{:else if changeDirection === 'down'}
-							<svg class="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="w-3 h-3 sm:w-4 sm:h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path
 									stroke-linecap="round"
 									stroke-linejoin="round"
@@ -80,13 +80,13 @@
 							0%
 						{/if}
 					</span>
-					<span class="text-gray-500 dark:text-gray-400">{changeLabel}</span>
+					<span class="text-gray-500 dark:text-gray-400 hidden sm:inline">{changeLabel}</span>
 				</div>
 			{/if}
 		</div>
 
 		{#if icon}
-			<div class={cn('p-3 rounded-lg', iconColors[variant])}>
+			<div class={cn('p-2 sm:p-3 rounded-lg shrink-0', iconColors[variant])}>
 				{@render icon()}
 			</div>
 		{/if}

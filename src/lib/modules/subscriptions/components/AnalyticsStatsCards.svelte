@@ -13,14 +13,14 @@
 	let monthlyChange = $derived(subscriptionsService.calculateMonthlyChange(analytics.monthlyTrend));
 </script>
 
-<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+<div class="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
 	<StatCard
 		title="月度支出"
 		value={subscriptionsService.formatCurrency(analytics.averageMonthly)}
 		variant="primary"
 	>
 		{#snippet icon()}
-			<DollarSign class="w-6 h-6" />
+			<DollarSign class="w-5 h-5 sm:w-6 sm:h-6" />
 		{/snippet}
 	</StatCard>
 
@@ -30,7 +30,7 @@
 		variant="success"
 	>
 		{#snippet icon()}
-			<Calendar class="w-6 h-6" />
+			<Calendar class="w-5 h-5 sm:w-6 sm:h-6" />
 		{/snippet}
 	</StatCard>
 
@@ -41,16 +41,16 @@
 	>
 		{#snippet icon()}
 			{#if monthlyChange >= 0}
-				<TrendingUp class="w-6 h-6" />
+				<TrendingUp class="w-5 h-5 sm:w-6 sm:h-6" />
 			{:else}
-				<TrendingDown class="w-6 h-6" />
+				<TrendingDown class="w-5 h-5 sm:w-6 sm:h-6" />
 			{/if}
 		{/snippet}
 	</StatCard>
 
 	<StatCard title="訂閱分類" value="{analytics.categoryBreakdown.length} 類" variant="default">
 		{#snippet icon()}
-			<PieChart class="w-6 h-6" />
+			<PieChart class="w-5 h-5 sm:w-6 sm:h-6" />
 		{/snippet}
 	</StatCard>
 </div>

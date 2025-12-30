@@ -29,12 +29,12 @@
 <Card variant="bordered">
 	{#snippet header()}
 		<div class="flex items-center gap-2">
-			<PieChartIcon class="w-5 h-5 text-purple-500" />
-			<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">分類支出佔比</h2>
+			<PieChartIcon class="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
+			<h2 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">分類支出佔比</h2>
 		</div>
 	{/snippet}
 	{#snippet children()}
-		<div class="h-72">
+		<div class="h-56 sm:h-72">
 			<PieChart data={chartData} class="h-full" />
 		</div>
 	{/snippet}
