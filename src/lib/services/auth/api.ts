@@ -75,8 +75,9 @@ export const authApi = {
 	/**
 	 * 取得目前登入的使用者
 	 */
-	async getCurrentUser(): Promise<{ user: User }> {
-		return apiClient.get<{ user: User }>('/auth/me');
+	async getCurrentUser(): Promise<User> {
+		// apiClient 自動解包 { data: User } 回應
+		return apiClient.get<User>('/auth/me');
 	},
 
 	/**
@@ -132,8 +133,8 @@ export const authApi = {
 	 */
 	async updateProfile(userId: string, data: UpdateProfileData): Promise<User> {
 		try {
-			const response = await apiClient.patch<{ user: User }>(`/users/${userId}`, data);
-			return response.user;
+			// apiClient 自動解包 { data: User } 回應
+			return await apiClient.patch<User>(`/users/${userId}`, data);
 		} catch (error) {
 			if (error instanceof ApiError && error.message.includes('email')) {
 				throw new Error('此電子郵件已被使用');

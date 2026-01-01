@@ -109,9 +109,8 @@ export const usersApi = {
 		}
 
 		try {
-			// apiClient 自動解包 data，返回 { user: User }
-			const response = await apiClient.get<{ user: User }>(`/users/${id}`);
-			return response.user;
+			// apiClient 自動解包 { data: User } 回應
+			return await apiClient.get<User>(`/users/${id}`);
 		} catch (error) {
 			if (error instanceof ApiError && error.isNotFound()) {
 				throw new Error('使用者不存在');
@@ -129,8 +128,8 @@ export const usersApi = {
 		}
 
 		try {
-			const response = await apiClient.post<{ user: User }>('/users', data);
-			return response.user;
+			// apiClient 自動解包 { data: User } 回應
+			return await apiClient.post<User>('/users', data);
 		} catch (error) {
 			if (error instanceof ApiError) {
 				throw new Error(ERROR_MESSAGES[error.message] || error.message);
@@ -148,8 +147,8 @@ export const usersApi = {
 		}
 
 		try {
-			const response = await apiClient.patch<{ user: User }>(`/users/${id}`, data);
-			return response.user;
+			// apiClient 自動解包 { data: User } 回應
+			return await apiClient.patch<User>(`/users/${id}`, data);
 		} catch (error) {
 			if (error instanceof ApiError) {
 				if (error.isNotFound()) {

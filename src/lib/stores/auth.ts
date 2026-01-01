@@ -151,7 +151,7 @@ function createAuthStore() {
 			if (!state.token) return false;
 
 			try {
-				const { user } = await authApi.getCurrentUser();
+				const user = await authApi.getCurrentUser();
 				const permissions = await authApi.getPermissions();
 				update((s) => {
 					const newState = {
