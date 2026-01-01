@@ -1,16 +1,32 @@
 import { writable, derived, get } from 'svelte/store';
 import { generateUUID } from '$lib/utils';
+import type { Notification as ApiNotification, NotificationType, NotificationPriority } from '$lib/types';
 
 export interface Notification {
 	id: string;
-	type: 'info' | 'success' | 'warning' | 'error';
+	userId?: string;
+	type: NotificationType;
+	eventType?: string;
 	title: string;
 	message: string;
+	payload?: Record<string, unknown> | null;
+	link?: string | null;
 	read: boolean;
-	timestamp: string;
-	link?: string;
-	/** 來源：local (本地) | remote (WebSocket) */
+	priority?: NotificationPriority;
+	createdAt: string;
+	readAt?: string | null;
+	/** 來源：local (本地) | remote (WebSocket/API) */
 	source?: 'local' | 'remote';
+}
+
+/**
+ * 將後端 API 通知轉換為 Store 通知格式
+ */
+export function fromApiNotification(apiNotification: ApiNotification): Notification {
+	return {
+		...apiNotification,
+		source: 'remote'
+	};
 }
 
 interface NotificationsState {
@@ -66,14 +82,15 @@ function createNotificationsStore() {
 		},
 
 		add: (
-			notification: Omit<Notification, 'id' | 'timestamp' | 'read'>,
+			notification: Omit<Notification, 'id' | 'createdAt' | 'read'>,
 			options?: { source?: 'local' | 'remote' }
 		) => {
 			const newNotification: Notification = {
 				...notification,
 				id: generateUUID(),
-				timestamp: new Date().toISOString(),
+				createdAt: new Date().toISOString(),
 				read: false,
+				priority: notification.priority || 'normal',
 				source: options?.source || 'local'
 			};
 			update((state) => ({

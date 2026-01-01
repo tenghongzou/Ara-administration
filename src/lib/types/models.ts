@@ -119,19 +119,6 @@ export interface RegisterData {
 	confirmPassword: string;
 }
 
-// 審計日誌
-export interface AuditLog {
-	id: string;
-	userId: string;
-	action: string;
-	resource: string;
-	resourceId: string;
-	details: Record<string, unknown>;
-	ipAddress: string;
-	userAgent: string;
-	createdAt: string;
-}
-
 // 訂閱管理相關
 export type BillingCycle = 'weekly' | 'monthly' | 'quarterly' | 'semi-annual' | 'annual';
 export type SubscriptionStatus = 'active' | 'paused' | 'cancelled' | 'expired';
@@ -267,16 +254,124 @@ export interface Notification {
 	id: string;
 	userId: string;
 	type: NotificationType;
+	eventType: string;
 	title: string;
 	message: string;
-	link?: string;
+	payload?: Record<string, unknown> | null;
+	link?: string | null;
 	read: boolean;
+	priority: NotificationPriority;
+	source?: string | null;
 	createdAt: string;
+	readAt?: string | null;
 }
 
 export type NotificationType =
+	| 'info'
+	| 'success'
+	| 'warning'
+	| 'error'
 	| 'security'
 	| 'system'
-	| 'subscription'
-	| 'user'
-	| 'info';
+	| 'subscription';
+
+export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
+
+// 通知統計
+export interface NotificationStatistics {
+	total: number;
+	unread: number;
+	byType: Record<NotificationType, number>;
+}
+
+// 審計日誌
+export interface AuditLog {
+	id: string;
+	userId?: string | null;
+	userName?: string | null;
+	userEmail?: string | null;
+	action: AuditLogAction;
+	resource: string;
+	resourceId?: string | null;
+	description?: string | null;
+	oldValues?: Record<string, unknown> | null;
+	newValues?: Record<string, unknown> | null;
+	metadata?: Record<string, unknown> | null;
+	ipAddress?: string | null;
+	userAgent?: string | null;
+	status: 'success' | 'failure';
+	errorMessage?: string | null;
+	createdAt: string;
+}
+
+export type AuditLogAction =
+	| 'create'
+	| 'update'
+	| 'delete'
+	| 'login'
+	| 'logout'
+	| 'view'
+	| 'export'
+	| 'import';
+
+// 審計日誌統計
+export interface AuditLogStatistics {
+	total: number;
+	byAction: Record<string, number>;
+	byResource: Record<string, number>;
+	byStatus: Record<string, number>;
+}
+
+// 審計日誌篩選選項
+export interface AuditLogFilters {
+	actions: string[];
+	resources: string[];
+	statuses: string[];
+}
+
+// Dashboard 統計
+export interface DashboardStats {
+	users: {
+		total: number;
+		active: number;
+		inactive: number;
+		pending: number;
+		suspended: number;
+		newThisMonth: number;
+		newLastMonth: number;
+		growthPercentage: number;
+	};
+	subscriptions: {
+		total: number;
+		active: number;
+		paused: number;
+		cancelled: number;
+		monthlySpending: number;
+		yearlySpending: number;
+		upcomingCount: number;
+	};
+	activity: {
+		totalThisMonth: number;
+		byAction: Record<string, number>;
+		byResource: Record<string, number>;
+		successRate: number;
+	};
+	generatedAt: string;
+}
+
+// Dashboard 活動項目
+export interface DashboardActivity {
+	id: string;
+	type: string;
+	action: string;
+	resource: string;
+	resourceId?: string | null;
+	description: string;
+	user?: {
+		id: string;
+		name: string;
+		avatar?: string | null;
+	} | null;
+	status: string;
+	createdAt: string;
+}

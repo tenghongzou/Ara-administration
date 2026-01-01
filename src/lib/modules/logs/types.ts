@@ -3,25 +3,32 @@
  */
 
 // 重新匯出基礎類型
-export type { AuditLog } from '$lib/services/mock-data';
+export type { AuditLog, AuditLogAction, AuditLogStatistics, AuditLogFilters } from '$lib/types';
 
 /**
- * 日誌操作類型
+ * 日誌操作類型（匹配後端）
  */
 export type LogAction =
-	| 'LOGIN'
-	| 'LOGOUT'
-	| 'CREATE'
-	| 'UPDATE'
-	| 'DELETE'
-	| 'EXPORT'
-	| 'IMPORT'
-	| 'DEPLOY';
+	| 'login'
+	| 'logout'
+	| 'create'
+	| 'update'
+	| 'delete'
+	| 'view'
+	| 'export'
+	| 'import';
 
 /**
- * 日誌資源類型
+ * 日誌資源類型（匹配後端）
  */
-export type LogResource = 'auth' | 'user' | 'settings' | 'content' | 'system' | 'report';
+export type LogResource =
+	| 'auth'
+	| 'user'
+	| 'role'
+	| 'permission'
+	| 'subscription'
+	| 'notification'
+	| 'settings';
 
 /**
  * 日誌狀態
@@ -86,7 +93,7 @@ export interface LogOption {
  * 日誌詳情
  */
 export interface LogDetail {
-	log: import('$lib/services/mock-data').AuditLog;
+	log: import('$lib/types').AuditLog;
 	changes?: {
 		field: string;
 		oldValue: unknown;

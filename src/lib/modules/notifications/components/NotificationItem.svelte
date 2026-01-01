@@ -24,7 +24,7 @@
 
 	const style = $derived(notificationsService.getTypeStyle(notification.type));
 	const badge = $derived(notificationsService.getTypeBadge(notification.type));
-	const formattedTime = $derived(notificationsService.formatTime(notification.timestamp));
+	const formattedTime = $derived(notificationsService.formatTime(notification.createdAt));
 </script>
 
 <Card

@@ -1,5 +1,6 @@
 import { dashboardApi, subscriptionsApi, type UpcomingReminder } from '$lib/services';
 import type { DashboardStats, Activity, DashboardData, ReminderType, ReminderBadgeInfo } from '../types';
+import { fromApiDashboardStats, fromApiActivity } from '../types';
 
 /**
  * 儀表板服務
@@ -11,11 +12,15 @@ class DashboardService {
 	 */
 	async loadDashboardData(reminderDays: number = 7): Promise<DashboardData> {
 		try {
-			const [stats, activities, reminders] = await Promise.all([
-				dashboardApi.getStats() as Promise<DashboardStats>,
-				dashboardApi.getRecentActivities() as Promise<Activity[]>,
+			const [apiStats, apiActivities, reminders] = await Promise.all([
+				dashboardApi.getStats(),
+				dashboardApi.getRecentActivities(),
 				subscriptionsApi.getUpcomingReminders(reminderDays)
 			]);
+
+			// 轉換 API 格式為本地格式
+			const stats = fromApiDashboardStats(apiStats);
+			const activities = apiActivities.map(fromApiActivity);
 
 			return {
 				stats,
@@ -40,7 +45,8 @@ class DashboardService {
 	 */
 	async loadStats(): Promise<DashboardStats | null> {
 		try {
-			return (await dashboardApi.getStats()) as DashboardStats;
+			const apiStats = await dashboardApi.getStats();
+			return fromApiDashboardStats(apiStats);
 		} catch {
 			return null;
 		}
@@ -51,7 +57,8 @@ class DashboardService {
 	 */
 	async loadActivities(): Promise<Activity[]> {
 		try {
-			return (await dashboardApi.getRecentActivities()) as Activity[];
+			const apiActivities = await dashboardApi.getRecentActivities();
+			return apiActivities.map(fromApiActivity);
 		} catch {
 			return [];
 		}

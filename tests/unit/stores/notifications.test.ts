@@ -145,14 +145,14 @@ describe('Notifications Store', () => {
 		expect(items[0].id).not.toBe(items[1].id);
 	});
 
-	it('should include timestamp on added notifications', () => {
+	it('should include createdAt on added notifications', () => {
 		const before = new Date().toISOString();
 		notifications.add({ type: 'info', title: 'Test', message: 'msg' });
 		const after = new Date().toISOString();
 
-		const timestamp = get(notifications).items[0].timestamp;
-		expect(timestamp >= before).toBe(true);
-		expect(timestamp <= after).toBe(true);
+		const createdAt = get(notifications).items[0].createdAt;
+		expect(createdAt >= before).toBe(true);
+		expect(createdAt <= after).toBe(true);
 	});
 
 	it('should add notification with optional link', () => {

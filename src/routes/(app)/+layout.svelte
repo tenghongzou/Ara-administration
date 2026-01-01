@@ -81,12 +81,18 @@
 		const user = $currentUser;
 		if (!user) return;
 
-		// 從 API 載入使用者通知設定並同步到 store
-		notificationApi.getSettings(user.id).then((settings) => {
-			notificationSettings.set(settings);
-			// 預載音效資源
+		// 檢查 localStorage 是否已有設定，有則優先使用
+		const storedSettings = localStorage.getItem('notification-settings');
+		if (storedSettings) {
+			// localStorage 已有設定，直接使用（不從 API 覆蓋）
 			pushNotificationService.preloadSounds();
-		});
+		} else {
+			// localStorage 無設定，從 API 載入預設值
+			notificationApi.getSettings().then((settings) => {
+				notificationSettings.set(settings);
+				pushNotificationService.preloadSounds();
+			});
+		}
 	});
 
 	// WebSocket 連線管理

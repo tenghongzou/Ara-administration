@@ -13,14 +13,17 @@ import type {
 type StoreNotificationType = Notification['type'];
 
 /**
- * 分類選項配置（匹配 Store 的通知類型）
+ * 分類選項配置（匹配後端 NotificationType）
  */
 export const categoryOptions: CategoryOption[] = [
 	{ value: 'all', label: '全部', icon: '📋' },
 	{ value: 'info', label: '資訊', icon: 'ℹ️' },
 	{ value: 'success', label: '成功', icon: '✓' },
 	{ value: 'warning', label: '警告', icon: '!' },
-	{ value: 'error', label: '錯誤', icon: '✕' }
+	{ value: 'error', label: '錯誤', icon: '✕' },
+	{ value: 'security', label: '安全', icon: '🔒' },
+	{ value: 'system', label: '系統', icon: '⚙️' },
+	{ value: 'subscription', label: '訂閱', icon: '📅' }
 ];
 
 /**
@@ -63,7 +66,7 @@ class NotificationsService {
 			endDate.setHours(23, 59, 59, 999);
 
 			filtered = filtered.filter((item) => {
-				const itemDate = new Date(item.timestamp);
+				const itemDate = new Date(item.createdAt);
 				return itemDate >= startDate && itemDate <= endDate;
 			});
 		}
@@ -80,7 +83,10 @@ class NotificationsService {
 			info: [],
 			success: [],
 			warning: [],
-			error: []
+			error: [],
+			security: [],
+			system: [],
+			subscription: []
 		};
 
 		items.forEach((item) => {
@@ -102,7 +108,10 @@ class NotificationsService {
 			info: 0,
 			success: 0,
 			warning: 0,
-			error: 0
+			error: 0,
+			security: 0,
+			system: 0,
+			subscription: 0
 		};
 
 		items.forEach((item) => {
@@ -201,6 +210,27 @@ class NotificationsService {
 					text: 'text-red-600 dark:text-red-400',
 					border: 'border-red-200 dark:border-red-800'
 				};
+			case 'security':
+				return {
+					icon: '🔒',
+					bg: 'bg-purple-100 dark:bg-purple-900/30',
+					text: 'text-purple-600 dark:text-purple-400',
+					border: 'border-purple-200 dark:border-purple-800'
+				};
+			case 'system':
+				return {
+					icon: '⚙️',
+					bg: 'bg-gray-100 dark:bg-gray-800/50',
+					text: 'text-gray-600 dark:text-gray-400',
+					border: 'border-gray-200 dark:border-gray-700'
+				};
+			case 'subscription':
+				return {
+					icon: '📅',
+					bg: 'bg-indigo-100 dark:bg-indigo-900/30',
+					text: 'text-indigo-600 dark:text-indigo-400',
+					border: 'border-indigo-200 dark:border-indigo-800'
+				};
 			case 'info':
 			default:
 				return {
@@ -223,6 +253,12 @@ class NotificationsService {
 				return { variant: 'warning', label: '警告' };
 			case 'error':
 				return { variant: 'error', label: '錯誤' };
+			case 'security':
+				return { variant: 'default', label: '安全' };
+			case 'system':
+				return { variant: 'default', label: '系統' };
+			case 'subscription':
+				return { variant: 'info', label: '訂閱' };
 			case 'info':
 			default:
 				return { variant: 'info', label: '資訊' };

@@ -12,6 +12,8 @@ import type {
 	PaginatedData
 } from '$lib/types';
 import { httpClient, HttpError } from '../core/http-client';
+import { config } from '$lib/constants';
+import { mockSubscriptionsApi } from '$lib/mock';
 
 export interface GetSubscriptionsParams {
 	page?: number;
@@ -44,6 +46,10 @@ interface PaymentResponse {
 
 export const subscriptionsApi = {
 	async getSubscriptions(params: GetSubscriptionsParams = {}): Promise<PaginatedData<Subscription>> {
+		if (config.isMockMode) {
+			return mockSubscriptionsApi.getSubscriptions(params);
+		}
+
 		const searchParams = new URLSearchParams();
 
 		if (params.page) searchParams.set('page', String(params.page));
@@ -73,6 +79,10 @@ export const subscriptionsApi = {
 	},
 
 	async getSubscription(id: string): Promise<Subscription> {
+		if (config.isMockMode) {
+			return mockSubscriptionsApi.getSubscription(id);
+		}
+
 		try {
 			const response = await httpClient.get<SubscriptionResponse>(`/subscriptions/${id}`);
 			return response.subscription;
@@ -85,6 +95,10 @@ export const subscriptionsApi = {
 	},
 
 	async createSubscription(data: CreateSubscriptionData): Promise<Subscription> {
+		if (config.isMockMode) {
+			return mockSubscriptionsApi.createSubscription(data);
+		}
+
 		try {
 			const response = await httpClient.post<SubscriptionResponse>('/subscriptions', data);
 			return response.subscription;
@@ -97,6 +111,10 @@ export const subscriptionsApi = {
 	},
 
 	async updateSubscription(id: string, data: UpdateSubscriptionData): Promise<Subscription> {
+		if (config.isMockMode) {
+			return mockSubscriptionsApi.updateSubscription(id, data);
+		}
+
 		try {
 			const response = await httpClient.patch<SubscriptionResponse>(`/subscriptions/${id}`, data);
 			return response.subscription;
@@ -112,6 +130,10 @@ export const subscriptionsApi = {
 	},
 
 	async deleteSubscription(id: string): Promise<void> {
+		if (config.isMockMode) {
+			return mockSubscriptionsApi.deleteSubscription(id);
+		}
+
 		try {
 			await httpClient.delete(`/subscriptions/${id}`);
 		} catch (error) {
@@ -125,6 +147,16 @@ export const subscriptionsApi = {
 	},
 
 	async getStatistics(): Promise<SubscriptionStats> {
+		if (config.isMockMode) {
+			const stats = await mockSubscriptionsApi.getStatistics();
+			return {
+				totalMonthly: stats.monthlySpending,
+				totalYearly: stats.yearlySpending,
+				upcomingCount: 2,
+				activeCount: stats.activeCount
+			};
+		}
+
 		const response = await httpClient.get<SubscriptionStats>('/subscriptions/stats');
 		// 確保空資料時也返回正確格式
 		return {
@@ -136,6 +168,14 @@ export const subscriptionsApi = {
 	},
 
 	async getUpcoming(days: number = 7): Promise<Subscription[]> {
+		if (config.isMockMode) {
+			const reminders = await mockSubscriptionsApi.getUpcomingReminders(days);
+			const { data: subs } = await mockSubscriptionsApi.getSubscriptions();
+			return reminders
+				.map((r) => subs.find((s) => s.id === r.subscriptionId))
+				.filter((s): s is Subscription => s !== undefined);
+		}
+
 		const response = await httpClient.get<{ data: Subscription[] }>(
 			`/subscriptions/upcoming?days=${days}`
 		);
@@ -146,6 +186,16 @@ export const subscriptionsApi = {
 	 * 取得即將到期的訂閱提醒
 	 */
 	async getUpcomingReminders(days: number = 7): Promise<UpcomingReminder[]> {
+		if (config.isMockMode) {
+			const reminders = await mockSubscriptionsApi.getUpcomingReminders(days);
+			const { data: subs } = await mockSubscriptionsApi.getSubscriptions();
+			return reminders.map((r) => ({
+				subscription: subs.find((s) => s.id === r.subscriptionId)!,
+				daysUntilBilling: r.daysUntilDue,
+				reminderType: r.type
+			}));
+		}
+
 		const response = await httpClient.get<{ data: UpcomingReminder[] }>(
 			`/subscriptions/reminders?days=${days}`
 		);
@@ -156,6 +206,10 @@ export const subscriptionsApi = {
 	 * 取得付款歷史
 	 */
 	async getPaymentHistory(subscriptionId: string): Promise<PaymentHistory[]> {
+		if (config.isMockMode) {
+			return mockSubscriptionsApi.getPaymentHistory(subscriptionId);
+		}
+
 		const response = await httpClient.get<{ data: PaymentHistory[] }>(
 			`/subscriptions/${subscriptionId}/payments`
 		);

@@ -56,9 +56,13 @@
 
 		saving = true;
 		try {
+			// Generate username from email (part before @)
+			const username = email.trim().split('@')[0];
 			await usersApi.createUser({
+				username,
 				name: name.trim(),
 				email: email.trim(),
+				password,
 				role
 			});
 			toast.success('使用者已建立');

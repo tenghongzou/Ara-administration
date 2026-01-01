@@ -39,7 +39,7 @@
 		if (!user) return;
 		loading = true;
 		try {
-			settings = await notificationApi.getSettings(user.id);
+			settings = await notificationApi.getSettings();
 		} catch (error) {
 			toast.error('載入設定失敗');
 		} finally {
@@ -62,7 +62,7 @@
 
 		saving = true;
 		try {
-			const updatedSettings = await notificationApi.updateSettings(user.id, settings);
+			const updatedSettings = await notificationApi.updateSettings(settings);
 			// 同步到客戶端 store，讓即時推送服務使用最新設定
 			notificationSettings.set(updatedSettings);
 			hasChanges = false;

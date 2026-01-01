@@ -1,179 +1,159 @@
 /**
  * 通知 API 模組
+ * 對接後端 /api/v1/notifications 端點
  */
 
-import type { NotificationSettings, Notification } from '$lib/types';
-import { delay } from '../core';
+import type { NotificationSettings, Notification, NotificationStatistics, PaginatedData } from '$lib/types';
+import { httpClient, HttpError } from '../core/http-client';
 
-// Mock notification settings storage
-const mockNotificationSettings: Record<string, NotificationSettings> = {};
+export interface GetNotificationsParams {
+	page?: number;
+	pageSize?: number;
+	read?: boolean;
+	type?: string;
+}
 
-// Default notification settings
-function getDefaultNotificationSettings(): NotificationSettings {
-	return {
-		email: {
-			enabled: true,
-			securityAlerts: true,
-			loginNotifications: true,
-			systemUpdates: true,
-			weeklyReport: false,
-			subscriptionReminders: true,
-			marketing: false
-		},
-		push: {
-			enabled: false,
-			permission: 'default',
-			securityAlerts: true,
-			loginNotifications: true,
-			systemAlerts: true,
-			mentions: true,
-			subscriptionReminders: true
-		},
-		inApp: {
-			enabled: true,
-			showBadge: true,
-			playSound: false,
-			desktopPopup: true,
-			autoMarkRead: false
-		},
-		quietHours: {
-			enabled: false,
-			startTime: '22:00',
-			endTime: '08:00',
-			timezone: 'Asia/Taipei',
-			allowUrgent: true
-		}
+interface NotificationsResponse {
+	data: Notification[];
+	pagination: {
+		page: number;
+		pageSize: number;
+		total: number;
+		totalPages: number;
 	};
 }
 
-// Mock notifications
-let mockNotifications: Notification[] = [
-	{
-		id: '1',
-		userId: '1',
-		type: 'security',
-		title: '新裝置登入',
-		message: '您的帳號在新裝置上登入：Windows PC - Chrome',
-		link: '/settings/security',
-		read: false,
-		createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString()
-	},
-	{
-		id: '2',
-		userId: '1',
-		type: 'subscription',
-		title: '訂閱即將到期',
-		message: 'Netflix 訂閱將於 3 天後到期',
-		link: '/subscriptions/1',
-		read: false,
-		createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-	},
-	{
-		id: '3',
-		userId: '1',
-		type: 'system',
-		title: '系統更新完成',
-		message: '系統已更新至最新版本 v2.1.0',
-		read: true,
-		createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-	},
-	{
-		id: '4',
-		userId: '1',
-		type: 'info',
-		title: '歡迎使用 Ara Admin',
-		message: '感謝您使用我們的服務，如有任何問題請隨時聯繫我們。',
-		read: true,
-		createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-	}
-];
+interface UnreadCountResponse {
+	count: number;
+}
 
 export const notificationApi = {
-	// 取得通知設定
-	async getSettings(userId: string): Promise<NotificationSettings> {
-		await delay(400);
-		if (!mockNotificationSettings[userId]) {
-			mockNotificationSettings[userId] = getDefaultNotificationSettings();
-		}
-		return { ...mockNotificationSettings[userId] };
+	/**
+	 * 取得通知列表（分頁）
+	 */
+	async getNotifications(params: GetNotificationsParams = {}): Promise<PaginatedData<Notification>> {
+		const searchParams = new URLSearchParams();
+
+		if (params.page) searchParams.set('page', String(params.page));
+		if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
+		if (params.read !== undefined) searchParams.set('read', String(params.read));
+		if (params.type) searchParams.set('type', params.type);
+
+		const query = searchParams.toString();
+		const response = await httpClient.get<NotificationsResponse>(
+			`/notifications${query ? `?${query}` : ''}`
+		);
+
+		return {
+			data: response.data || [],
+			pagination: response.pagination || {
+				page: params.page || 1,
+				pageSize: params.pageSize || 20,
+				total: 0,
+				totalPages: 0
+			}
+		};
 	},
 
-	// 更新通知設定
-	async updateSettings(userId: string, settings: Partial<NotificationSettings>): Promise<NotificationSettings> {
-		await delay(500);
-		if (!mockNotificationSettings[userId]) {
-			mockNotificationSettings[userId] = getDefaultNotificationSettings();
-		}
-
-		// Deep merge settings
-		const current = mockNotificationSettings[userId];
-		if (settings.email) {
-			current.email = { ...current.email, ...settings.email };
-		}
-		if (settings.push) {
-			current.push = { ...current.push, ...settings.push };
-		}
-		if (settings.inApp) {
-			current.inApp = { ...current.inApp, ...settings.inApp };
-		}
-		if (settings.quietHours) {
-			current.quietHours = { ...current.quietHours, ...settings.quietHours };
-		}
-
-		return { ...current };
-	},
-
-	// 取得通知列表
-	async getNotifications(userId: string): Promise<Notification[]> {
-		await delay(400);
-		return mockNotifications
-			.filter((n) => n.userId === userId)
-			.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-	},
-
-	// 取得未讀通知數量
-	async getUnreadCount(userId: string): Promise<number> {
-		await delay(200);
-		return mockNotifications.filter((n) => n.userId === userId && !n.read).length;
-	},
-
-	// 標記通知為已讀
-	async markAsRead(notificationId: string): Promise<void> {
-		await delay(300);
-		const notification = mockNotifications.find((n) => n.id === notificationId);
-		if (notification) {
-			notification.read = true;
+	/**
+	 * 取得單一通知
+	 */
+	async getNotification(id: string): Promise<Notification> {
+		try {
+			const response = await httpClient.get<{ data: Notification }>(`/notifications/${id}`);
+			return response.data;
+		} catch (error) {
+			if (error instanceof HttpError && error.status === 404) {
+				throw new Error('通知不存在');
+			}
+			throw error;
 		}
 	},
 
-	// 標記所有通知為已讀
-	async markAllAsRead(userId: string): Promise<void> {
-		await delay(400);
-		mockNotifications
-			.filter((n) => n.userId === userId)
-			.forEach((n) => {
-				n.read = true;
-			});
+	/**
+	 * 取得未讀通知數量
+	 */
+	async getUnreadCount(): Promise<number> {
+		const response = await httpClient.get<{ data: UnreadCountResponse }>('/notifications/unread-count');
+		return response.data?.count ?? 0;
 	},
 
-	// 刪除通知
+	/**
+	 * 取得通知統計
+	 */
+	async getStatistics(): Promise<NotificationStatistics> {
+		const response = await httpClient.get<{ data: NotificationStatistics }>('/notifications/statistics');
+		return response.data;
+	},
+
+	/**
+	 * 標記通知為已讀
+	 */
+	async markAsRead(notificationId: string): Promise<Notification> {
+		try {
+			const response = await httpClient.post<{ data: Notification }>(
+				`/notifications/${notificationId}/read`
+			);
+			return response.data;
+		} catch (error) {
+			if (error instanceof HttpError && error.status === 404) {
+				throw new Error('通知不存在');
+			}
+			throw error;
+		}
+	},
+
+	/**
+	 * 標記所有通知為已讀
+	 */
+	async markAllAsRead(): Promise<void> {
+		await httpClient.post('/notifications/mark-all-read');
+	},
+
+	/**
+	 * 刪除通知
+	 */
 	async deleteNotification(notificationId: string): Promise<void> {
-		await delay(300);
-		const index = mockNotifications.findIndex((n) => n.id === notificationId);
-		if (index !== -1) {
-			mockNotifications.splice(index, 1);
+		try {
+			await httpClient.delete(`/notifications/${notificationId}`);
+		} catch (error) {
+			if (error instanceof HttpError && error.status === 404) {
+				throw new Error('通知不存在');
+			}
+			throw error;
 		}
 	},
 
-	// 清除所有通知
-	async clearAllNotifications(userId: string): Promise<void> {
-		await delay(400);
-		mockNotifications = mockNotifications.filter((n) => n.userId !== userId);
+	/**
+	 * 清除所有通知
+	 */
+	async clearAllNotifications(): Promise<void> {
+		await httpClient.delete('/notifications/clear');
 	},
 
-	// 測試推播通知
+	/**
+	 * 取得通知設定
+	 */
+	async getSettings(): Promise<NotificationSettings> {
+		const response = await httpClient.get<{ data: NotificationSettings }>('/notifications/settings');
+		return response.data;
+	},
+
+	/**
+	 * 更新通知設定
+	 */
+	async updateSettings(settings: Partial<NotificationSettings>): Promise<NotificationSettings> {
+		const response = await httpClient.patch<{ data: NotificationSettings }>(
+			'/notifications/settings',
+			settings
+		);
+		return response.data;
+	},
+
+	/**
+	 * 測試推播通知（本地瀏覽器）
+	 */
 	async testPushNotification(): Promise<void> {
-		await delay(500);
 		if ('Notification' in window && Notification.permission === 'granted') {
 			new Notification('測試通知', {
 				body: '這是一則測試推播通知',

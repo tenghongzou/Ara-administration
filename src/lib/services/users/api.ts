@@ -4,6 +4,8 @@
 
 import type { User, PaginatedData } from '$lib/types';
 import { httpClient, HttpError } from '../core/http-client';
+import { config } from '$lib/constants';
+import { mockUsersApi } from '$lib/mock';
 
 export interface GetUsersParams {
 	page?: number;
@@ -56,6 +58,11 @@ interface UserResponse {
 
 export const usersApi = {
 	async getUsers(params: GetUsersParams = {}): Promise<PaginatedData<User>> {
+		// Use mock API in demo mode
+		if (config.isMockMode) {
+			return mockUsersApi.getUsers(params);
+		}
+
 		const searchParams = new URLSearchParams();
 
 		if (params.page) searchParams.set('page', String(params.page));
@@ -76,6 +83,10 @@ export const usersApi = {
 	},
 
 	async getUser(id: string): Promise<User> {
+		if (config.isMockMode) {
+			return mockUsersApi.getUser(id);
+		}
+
 		try {
 			const response = await httpClient.get<UserResponse>(`/users/${id}`);
 			return response.user;
@@ -88,6 +99,10 @@ export const usersApi = {
 	},
 
 	async createUser(data: CreateUserData): Promise<User> {
+		if (config.isMockMode) {
+			return mockUsersApi.createUser(data);
+		}
+
 		try {
 			const response = await httpClient.post<UserResponse>('/users', data);
 			return response.user;
@@ -105,6 +120,10 @@ export const usersApi = {
 	},
 
 	async updateUser(id: string, data: UpdateUserData): Promise<User> {
+		if (config.isMockMode) {
+			return mockUsersApi.updateUser(id, data);
+		}
+
 		try {
 			const response = await httpClient.patch<UserResponse>(`/users/${id}`, data);
 			return response.user;
@@ -126,6 +145,10 @@ export const usersApi = {
 	},
 
 	async deleteUser(id: string): Promise<void> {
+		if (config.isMockMode) {
+			return mockUsersApi.deleteUser(id);
+		}
+
 		try {
 			await httpClient.delete(`/users/${id}`);
 		} catch (error) {

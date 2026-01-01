@@ -86,10 +86,10 @@
 								role="button"
 							>
 								<td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">
-									{logsService.formatTimestamp(log.timestamp)}
+									{logsService.formatTimestamp(log.createdAt)}
 								</td>
 								<td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-									{log.userName}
+									{log.userName || '-'}
 								</td>
 								<td class="px-4 py-3 text-sm whitespace-nowrap">
 									<span
@@ -102,12 +102,12 @@
 									{logsService.getResourceLabel(log.resource)}
 								</td>
 								<td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 max-w-xs truncate">
-									{log.details || '-'}
+									{log.description || '-'}
 								</td>
 								<td
 									class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap font-mono"
 								>
-									{log.ip}
+									{log.ipAddress || '-'}
 								</td>
 								<td class="px-4 py-3 whitespace-nowrap">
 									<Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>

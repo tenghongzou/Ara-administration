@@ -3,35 +3,36 @@
  * 負責日誌相關的業務邏輯處理
  */
 
-import type { AuditLog } from '$lib/services/mock-data';
+import type { AuditLog } from '$lib/types';
 import type { LogFilters, LogStats, LogOption } from '../types';
 
 /**
- * 操作類型選項
+ * 操作類型選項（匹配後端 action 類型）
  */
 export const actionOptions: LogOption[] = [
 	{ value: '', label: '全部操作', icon: '📋' },
-	{ value: 'LOGIN', label: '登入', icon: '🔑' },
-	{ value: 'LOGOUT', label: '登出', icon: '🚪' },
-	{ value: 'CREATE', label: '新增', icon: '➕' },
-	{ value: 'UPDATE', label: '修改', icon: '✏️' },
-	{ value: 'DELETE', label: '刪除', icon: '🗑️' },
-	{ value: 'EXPORT', label: '匯出', icon: '📤' },
-	{ value: 'IMPORT', label: '匯入', icon: '📥' },
-	{ value: 'DEPLOY', label: '部署', icon: '🚀' }
+	{ value: 'login', label: '登入', icon: '🔑' },
+	{ value: 'logout', label: '登出', icon: '🚪' },
+	{ value: 'create', label: '新增', icon: '➕' },
+	{ value: 'update', label: '修改', icon: '✏️' },
+	{ value: 'delete', label: '刪除', icon: '🗑️' },
+	{ value: 'view', label: '檢視', icon: '👁️' },
+	{ value: 'export', label: '匯出', icon: '📤' },
+	{ value: 'import', label: '匯入', icon: '📥' }
 ];
 
 /**
- * 資源類型選項
+ * 資源類型選項（匹配後端 resource 類型）
  */
 export const resourceOptions: LogOption[] = [
 	{ value: '', label: '全部資源', icon: '📁' },
 	{ value: 'auth', label: '身份驗證', icon: '🔐' },
 	{ value: 'user', label: '使用者', icon: '👤' },
-	{ value: 'settings', label: '系統設定', icon: '⚙️' },
-	{ value: 'content', label: '內容管理', icon: '📝' },
-	{ value: 'system', label: '系統', icon: '💻' },
-	{ value: 'report', label: '報表', icon: '📊' }
+	{ value: 'role', label: '角色', icon: '🎭' },
+	{ value: 'permission', label: '權限', icon: '🔒' },
+	{ value: 'subscription', label: '訂閱', icon: '📅' },
+	{ value: 'notification', label: '通知', icon: '🔔' },
+	{ value: 'settings', label: '設定', icon: '⚙️' }
 ];
 
 /**
@@ -47,14 +48,14 @@ export const statusOptions: LogOption[] = [
  * 操作標籤對照
  */
 export const actionLabels: Record<string, string> = {
-	LOGIN: '登入',
-	LOGOUT: '登出',
-	CREATE: '新增',
-	UPDATE: '修改',
-	DELETE: '刪除',
-	EXPORT: '匯出',
-	IMPORT: '匯入',
-	DEPLOY: '部署'
+	login: '登入',
+	logout: '登出',
+	create: '新增',
+	update: '修改',
+	delete: '刪除',
+	view: '檢視',
+	export: '匯出',
+	import: '匯入'
 };
 
 /**
@@ -63,10 +64,11 @@ export const actionLabels: Record<string, string> = {
 export const resourceLabels: Record<string, string> = {
 	auth: '身份驗證',
 	user: '使用者',
-	settings: '系統設定',
-	content: '內容管理',
-	system: '系統',
-	report: '報表'
+	role: '角色',
+	permission: '權限',
+	subscription: '訂閱',
+	notification: '通知',
+	settings: '設定'
 };
 
 class LogsService {
@@ -101,9 +103,9 @@ class LogsService {
 			const searchLower = filters.search.toLowerCase();
 			filtered = filtered.filter(
 				(log) =>
-					log.userName.toLowerCase().includes(searchLower) ||
-					log.details?.toLowerCase().includes(searchLower) ||
-					log.ip.includes(searchLower)
+					log.userName?.toLowerCase().includes(searchLower) ||
+					log.description?.toLowerCase().includes(searchLower) ||
+					log.ipAddress?.includes(searchLower)
 			);
 		}
 
@@ -113,7 +115,7 @@ class LogsService {
 			const endDate = new Date(filters.dateRange.end).getTime();
 
 			filtered = filtered.filter((log) => {
-				const logDate = new Date(log.timestamp).getTime();
+				const logDate = new Date(log.createdAt).getTime();
 				return logDate >= startDate && logDate <= endDate;
 			});
 		}
@@ -151,7 +153,7 @@ class LogsService {
 			stats.byResource[log.resource] = (stats.byResource[log.resource] || 0) + 1;
 
 			// 日統計
-			const day = new Date(log.timestamp).toISOString().split('T')[0];
+			const day = new Date(log.createdAt).toISOString().split('T')[0];
 			dayMap.set(day, (dayMap.get(day) || 0) + 1);
 		});
 
@@ -255,7 +257,11 @@ class LogsService {
 	/**
 	 * 解析 User Agent
 	 */
-	parseUserAgent(userAgent: string): { browser: string; os: string } {
+	parseUserAgent(userAgent: string | null | undefined): { browser: string; os: string } {
+		if (!userAgent) {
+			return { browser: '未知瀏覽器', os: '未知系統' };
+		}
+
 		let browser = '未知瀏覽器';
 		let os = '未知系統';
 

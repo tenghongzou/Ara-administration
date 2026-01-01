@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Modal, Badge, Button } from '$lib/components/ui';
 	import { cn } from '$lib/utils';
-	import type { AuditLog } from '$lib/services/mock-data';
+	import type { AuditLog } from '$lib/types';
 	import { logsService } from '../services/logs.service';
 
 	interface Props {
@@ -13,9 +13,9 @@
 	let { log, open = $bindable(false), onClose }: Props = $props();
 
 	const statusBadge = $derived(log ? logsService.getStatusBadge(log.status) : null);
-	const formattedTime = $derived(log ? logsService.formatFullTimestamp(log.timestamp) : '');
-	const relativeTime = $derived(log ? logsService.formatRelativeTime(log.timestamp) : '');
-	const userAgent = $derived(log ? logsService.parseUserAgent(log.userAgent) : null);
+	const formattedTime = $derived(log ? logsService.formatFullTimestamp(log.createdAt) : '');
+	const relativeTime = $derived(log ? logsService.formatRelativeTime(log.createdAt) : '');
+	const userAgent = $derived(log ? logsService.parseUserAgent(log.userAgent ?? '') : null);
 </script>
 
 <Modal bind:open title="日誌詳情" size="lg" {onClose}>
@@ -46,8 +46,8 @@
 							</p>
 						</div>
 					</div>
-					{#if log.details}
-						<p class="text-gray-700 dark:text-gray-300 mt-2">{log.details}</p>
+					{#if log.description}
+						<p class="text-gray-700 dark:text-gray-300 mt-2">{log.description}</p>
 					{/if}
 				</div>
 
@@ -75,7 +75,7 @@
 							<span class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
 								IP 位址
 							</span>
-							<p class="text-gray-900 dark:text-gray-100 font-mono">{log.ip}</p>
+							<p class="text-gray-900 dark:text-gray-100 font-mono">{log.ipAddress ?? '-'}</p>
 						</div>
 
 						{#if userAgent}

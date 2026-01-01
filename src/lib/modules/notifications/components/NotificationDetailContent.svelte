@@ -18,7 +18,7 @@
 	const style = $derived(notification ? notificationsService.getTypeStyle(notification.type) : null);
 	const badge = $derived(notification ? notificationsService.getTypeBadge(notification.type) : null);
 	const formattedTime = $derived(
-		notification ? notificationsService.formatFullDateTime(notification.timestamp) : ''
+		notification ? notificationsService.formatFullDateTime(notification.createdAt) : ''
 	);
 </script>
 
@@ -128,7 +128,7 @@
 									</p>
 								</div>
 								<span class="text-xs text-gray-400 whitespace-nowrap">
-									{notificationsService.formatTime(related.timestamp)}
+									{notificationsService.formatTime(related.createdAt)}
 								</span>
 							</div>
 						</a>

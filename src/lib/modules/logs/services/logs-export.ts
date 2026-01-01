@@ -2,7 +2,7 @@
  * 日誌導出服務
  */
 
-import type { AuditLog } from '$lib/services/mock-data';
+import type { AuditLog } from '$lib/types';
 import type { ExportFormat, ExportOptions } from '../types';
 import { logsService } from './logs.service';
 
@@ -10,12 +10,12 @@ import { logsService } from './logs.service';
  * 導出欄位配置
  */
 export const exportFields = [
-	{ key: 'timestamp', label: '時間', default: true },
+	{ key: 'createdAt', label: '時間', default: true },
 	{ key: 'userName', label: '使用者', default: true },
 	{ key: 'action', label: '操作', default: true },
 	{ key: 'resource', label: '資源', default: true },
-	{ key: 'details', label: '詳情', default: true },
-	{ key: 'ip', label: 'IP 位址', default: true },
+	{ key: 'description', label: '描述', default: true },
+	{ key: 'ipAddress', label: 'IP 位址', default: true },
 	{ key: 'status', label: '狀態', default: true },
 	{ key: 'userAgent', label: '瀏覽器資訊', default: false },
 	{ key: 'userId', label: '使用者 ID', default: false },
@@ -88,14 +88,26 @@ class LogsExportService {
 		forDisplay: boolean = true
 	): string | unknown {
 		switch (field) {
-			case 'timestamp':
-				return forDisplay ? logsService.formatTimestamp(log.timestamp) : log.timestamp;
+			case 'createdAt':
+				return forDisplay ? logsService.formatTimestamp(log.createdAt) : log.createdAt;
 			case 'action':
 				return forDisplay ? logsService.getActionLabel(log.action) : log.action;
 			case 'resource':
 				return forDisplay ? logsService.getResourceLabel(log.resource) : log.resource;
 			case 'status':
 				return forDisplay ? (log.status === 'success' ? '成功' : '失敗') : log.status;
+			case 'ipAddress':
+				return log.ipAddress || '';
+			case 'description':
+				return log.description || '';
+			case 'userName':
+				return log.userName || '';
+			case 'userAgent':
+				return log.userAgent || '';
+			case 'userId':
+				return log.userId || '';
+			case 'resourceId':
+				return log.resourceId || '';
 			default:
 				return (log as unknown as Record<string, unknown>)[field] || '';
 		}
@@ -110,23 +122,19 @@ class LogsExportService {
 
 		let content: string;
 		let extension: string;
-		let mimeType: string;
 
 		switch (format) {
 			case 'csv':
 				content = this.exportToCSV(logs, includeFields);
 				extension = 'csv';
-				mimeType = 'text/csv;charset=utf-8';
 				break;
 			case 'json':
 				content = this.exportToJSON(logs, includeFields);
 				extension = 'json';
-				mimeType = 'application/json';
 				break;
 			case 'excel':
 				content = this.exportToExcel(logs, includeFields);
 				extension = 'csv';
-				mimeType = 'text/csv;charset=utf-8';
 				break;
 			default:
 				throw new Error(`Unsupported format: ${format}`);

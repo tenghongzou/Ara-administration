@@ -178,8 +178,6 @@ function shouldNotifyForCategory(category?: NotificationType): boolean {
 			return settings.push.systemAlerts;
 		case 'subscription':
 			return settings.push.subscriptionReminders;
-		case 'user':
-			return settings.push.mentions;
 		default:
 			return true;
 	}

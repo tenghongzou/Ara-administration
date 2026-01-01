@@ -135,7 +135,7 @@
 									{/if}
 								</div>
 								<p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mt-0.5">{item.message}</p>
-								<p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{formatTime(item.timestamp)}</p>
+								<p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{formatTime(item.createdAt)}</p>
 							</div>
 							<button
 								type="button"

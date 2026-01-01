@@ -1,9 +1,11 @@
 import type { Notification } from '$lib/stores/notifications';
 
+import type { NotificationType } from '$lib/types';
+
 /**
- * 通知分類（匹配 Store 的 type）
+ * 通知分類（匹配後端 NotificationType + 'all' 選項）
  */
-export type NotificationCategory = 'all' | 'info' | 'success' | 'warning' | 'error';
+export type NotificationCategory = 'all' | NotificationType;
 
 /**
  * 通知狀態篩選

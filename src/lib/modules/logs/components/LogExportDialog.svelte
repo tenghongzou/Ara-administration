@@ -2,7 +2,7 @@
 	import { Modal, Button, Checkbox } from '$lib/components/ui';
 	import type { ExportFormat, ExportOptions } from '../types';
 	import { exportFields, formatOptions, logsExportService } from '../services/logs-export';
-	import type { AuditLog } from '$lib/services/mock-data';
+	import type { AuditLog } from '$lib/types';
 	import { toast } from '$lib/stores/toast';
 
 	interface Props {
