@@ -227,12 +227,13 @@ export const subscriptionsApi = {
 			};
 		}
 
-		const response = await apiClient.get<SubscriptionStats>('/subscriptions/stats');
+		const response = await apiClient.get<{ data: SubscriptionStats }>('/subscriptions/stats');
+		const data = response.data || (response as unknown as SubscriptionStats);
 		return {
-			totalMonthly: response.totalMonthly ?? 0,
-			totalYearly: response.totalYearly ?? 0,
-			upcomingCount: response.upcomingCount ?? 0,
-			activeCount: response.activeCount ?? 0
+			totalMonthly: data.totalMonthly ?? 0,
+			totalYearly: data.totalYearly ?? 0,
+			upcomingCount: data.upcomingCount ?? 0,
+			activeCount: data.activeCount ?? 0
 		};
 	},
 
@@ -303,12 +304,13 @@ export const subscriptionsApi = {
 	 * 取得訂閱分析數據
 	 */
 	async getAnalytics(): Promise<AnalyticsData> {
-		const response = await apiClient.get<AnalyticsData>('/subscriptions/analytics');
+		const response = await apiClient.get<{ data: AnalyticsData }>('/subscriptions/analytics');
+		const data = response.data || (response as unknown as AnalyticsData);
 		return {
-			monthlyTrend: response.monthlyTrend || [],
-			categoryBreakdown: response.categoryBreakdown || [],
-			yearlyProjection: response.yearlyProjection ?? 0,
-			averageMonthly: response.averageMonthly ?? 0
+			monthlyTrend: data.monthlyTrend || [],
+			categoryBreakdown: data.categoryBreakdown || [],
+			yearlyProjection: data.yearlyProjection ?? 0,
+			averageMonthly: data.averageMonthly ?? 0
 		};
 	},
 

@@ -4,7 +4,7 @@
 	import { DataGrid } from '$lib/components/data-display';
 	import { Button, Badge } from '$lib/components/ui';
 	import { Pencil, Trash2 } from 'lucide-svelte';
-	import { hasPermission } from '$lib/stores/auth';
+	import { userPermissions, checkPermissionInList } from '$lib/stores/auth';
 	import { roleLabels, statusLabels, statusColors } from '../types';
 
 	interface Props {
@@ -30,6 +30,18 @@
 		onRefresh,
 		onDelete
 	}: Props = $props();
+
+	// 響應式權限
+	let permissions = $state<readonly string[]>([]);
+	$effect(() => {
+		const unsubscribe = userPermissions.subscribe((p) => {
+			permissions = p;
+		});
+		return unsubscribe;
+	});
+
+	const canUpdate = $derived(checkPermissionInList(permissions, 'users:update'));
+	const canDelete = $derived(checkPermissionInList(permissions, 'users:delete'));
 
 	function formatDate(dateString?: string): string {
 		if (!dateString) return '-';
@@ -161,14 +173,14 @@
 
 {#snippet actionsCell(user: User)}
 	<div class="flex items-center justify-center gap-1">
-		{#if hasPermission('users:update')}
+		{#if canUpdate}
 			<Button variant="ghost" size="icon" href="/settings/users/{user.id}">
 				{#snippet children()}
 					<Pencil class="w-4 h-4" />
 				{/snippet}
 			</Button>
 		{/if}
-		{#if hasPermission('users:delete')}
+		{#if canDelete}
 			<Button variant="ghost" size="icon" onclick={() => onDelete?.(user)}>
 				{#snippet children()}
 					<Trash2 class="w-4 h-4 text-red-500" />

@@ -3,7 +3,7 @@
 	import type { DataGridColumn } from '$lib/types';
 	import { DataGrid } from '$lib/components/data-display';
 	import { Button, Badge } from '$lib/components/ui';
-	import { hasPermission } from '$lib/stores/auth';
+	import { userPermissions, checkPermissionInList } from '$lib/stores/auth';
 	import { getPermissionLabel, getRoleColorClass } from '$lib/permissions';
 
 	interface Props {
@@ -14,6 +14,18 @@
 	}
 
 	let { roles, loading = false, onRefresh, onDelete }: Props = $props();
+
+	// 響應式權限
+	let permissions = $state<readonly string[]>([]);
+	$effect(() => {
+		const unsubscribe = userPermissions.subscribe((p) => {
+			permissions = p;
+		});
+		return unsubscribe;
+	});
+
+	const canUpdate = $derived(checkPermissionInList(permissions, 'roles:update'));
+	const canDelete = $derived(checkPermissionInList(permissions, 'roles:delete'));
 
 	const columns: DataGridColumn<Role>[] = [
 		{
@@ -133,7 +145,7 @@
 
 {#snippet actionsCell(role: Role)}
 	<div class="flex items-center justify-center gap-1">
-		{#if hasPermission('roles:update') && !(role.isSystem && role.key === 'admin')}
+		{#if canUpdate && !(role.isSystem && role.key === 'admin')}
 			<Button variant="ghost" size="icon" href="/settings/roles/{role.id}">
 				{#snippet children()}
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,7 +153,7 @@
 					</svg>
 				{/snippet}
 			</Button>
-		{:else if !hasPermission('roles:update')}
+		{:else if !canUpdate}
 			<Button variant="ghost" size="icon" href="/settings/roles/{role.id}">
 				{#snippet children()}
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,7 +163,7 @@
 				{/snippet}
 			</Button>
 		{/if}
-		{#if hasPermission('roles:delete') && !role.isSystem}
+		{#if canDelete && !role.isSystem}
 			<Button variant="ghost" size="icon" onclick={() => onDelete?.(role)}>
 				{#snippet children()}
 					<svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

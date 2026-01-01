@@ -45,7 +45,7 @@
 <script lang="ts">
 	import { Button, Badge } from '$lib/components/ui';
 	import { Pencil, Trash2 } from 'lucide-svelte';
-	import { hasPermission } from '$lib/stores/auth';
+	import { userPermissions, checkPermissionInList } from '$lib/stores/auth';
 
 	interface Props {
 		subscription: Subscription;
@@ -55,6 +55,18 @@
 	}
 
 	let { subscription, cellType, onEdit, onDelete }: Props = $props();
+
+	// 響應式權限
+	let permissions = $state<readonly string[]>([]);
+	$effect(() => {
+		const unsubscribe = userPermissions.subscribe((p) => {
+			permissions = p;
+		});
+		return unsubscribe;
+	});
+
+	const canUpdate = $derived(checkPermissionInList(permissions, 'subscriptions:update'));
+	const canDelete = $derived(checkPermissionInList(permissions, 'subscriptions:delete'));
 </script>
 
 {#if cellType === 'name'}
@@ -97,14 +109,14 @@
 	</Badge>
 {:else if cellType === 'actions'}
 	<div class="flex items-center justify-center gap-1">
-		{#if hasPermission('subscriptions:update')}
+		{#if canUpdate}
 			<Button variant="ghost" size="icon" href="/subscriptions/{subscription.id}">
 				{#snippet children()}
 					<Pencil class="w-4 h-4" />
 				{/snippet}
 			</Button>
 		{/if}
-		{#if hasPermission('subscriptions:delete') && onDelete}
+		{#if canDelete && onDelete}
 			<Button variant="ghost" size="icon" onclick={() => onDelete(subscription)}>
 				{#snippet children()}
 					<Trash2 class="w-4 h-4 text-red-500" />
