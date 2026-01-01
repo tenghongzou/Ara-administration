@@ -21,7 +21,9 @@ export interface LoginResponse {
 }
 
 export interface PermissionsResponse {
-	permissions: string[];
+	data: {
+		permissions: string[];
+	};
 }
 
 // ============================================================================
@@ -45,16 +47,17 @@ export const authApi = {
 	 */
 	async login(data: LoginRequest): Promise<LoginResponse> {
 		try {
-			const response = await apiClient.post<LoginResponse>('/auth/login', data, {
+			const response = await apiClient.post<{ data: LoginResponse }>('/auth/login', data, {
 				skipAuth: true // 登入不需要帶 token
 			});
 
+			const result = response.data;
 			// 登入成功後儲存 token
-			if (response.token) {
-				apiClient.setToken(response.token);
+			if (result.token) {
+				apiClient.setToken(result.token);
 			}
 
-			return response;
+			return result;
 		} catch (error) {
 			if (error instanceof ApiError) {
 				throw new Error(ERROR_MESSAGES[error.message] || error.message);
@@ -80,7 +83,8 @@ export const authApi = {
 	 * 取得目前登入的使用者
 	 */
 	async getCurrentUser(): Promise<{ user: User }> {
-		return apiClient.get<{ user: User }>('/auth/me');
+		const response = await apiClient.get<{ data: { user: User } }>('/auth/me');
+		return response.data;
 	},
 
 	/**
@@ -88,7 +92,7 @@ export const authApi = {
 	 */
 	async getPermissions(): Promise<string[]> {
 		const response = await apiClient.get<PermissionsResponse>('/auth/permissions');
-		return response.permissions;
+		return response.data?.permissions || [];
 	},
 
 	/**
@@ -136,8 +140,8 @@ export const authApi = {
 	 */
 	async updateProfile(userId: string, data: UpdateProfileData): Promise<User> {
 		try {
-			const response = await apiClient.patch<{ user: User }>(`/users/${userId}`, data);
-			return response.user;
+			const response = await apiClient.patch<{ data: { user: User } }>(`/users/${userId}`, data);
+			return response.data.user;
 		} catch (error) {
 			if (error instanceof ApiError && error.message.includes('email')) {
 				throw new Error('此電子郵件已被使用');
@@ -153,10 +157,10 @@ export const authApi = {
 		const formData = new FormData();
 		formData.append('avatar', file);
 
-		const response = await apiClient.upload<{ avatarUrl: string }>(
+		const response = await apiClient.upload<{ data: { avatarUrl: string } }>(
 			`/users/${userId}/avatar`,
 			formData
 		);
-		return response.avatarUrl;
+		return response.data.avatarUrl;
 	}
 };

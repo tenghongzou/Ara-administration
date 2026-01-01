@@ -57,7 +57,9 @@ interface UsersResponse {
 }
 
 interface UserResponse {
-	user: User;
+	data: {
+		user: User;
+	};
 }
 
 // ============================================================================
@@ -113,7 +115,7 @@ export const usersApi = {
 
 		try {
 			const response = await apiClient.get<UserResponse>(`/users/${id}`);
-			return response.user;
+			return response.data.user;
 		} catch (error) {
 			if (error instanceof ApiError && error.isNotFound()) {
 				throw new Error('使用者不存在');
@@ -132,7 +134,7 @@ export const usersApi = {
 
 		try {
 			const response = await apiClient.post<UserResponse>('/users', data);
-			return response.user;
+			return response.data.user;
 		} catch (error) {
 			if (error instanceof ApiError) {
 				throw new Error(ERROR_MESSAGES[error.message] || error.message);
@@ -151,7 +153,7 @@ export const usersApi = {
 
 		try {
 			const response = await apiClient.patch<UserResponse>(`/users/${id}`, data);
-			return response.user;
+			return response.data.user;
 		} catch (error) {
 			if (error instanceof ApiError) {
 				if (error.isNotFound()) {
@@ -222,10 +224,10 @@ export const usersApi = {
 		const formData = new FormData();
 		formData.append('avatar', file);
 
-		const response = await apiClient.upload<{ avatarUrl: string }>(
+		const response = await apiClient.upload<{ data: { avatarUrl: string } }>(
 			`/users/${id}/avatar`,
 			formData
 		);
-		return response.avatarUrl;
+		return response.data.avatarUrl;
 	}
 };

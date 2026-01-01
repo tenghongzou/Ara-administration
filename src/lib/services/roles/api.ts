@@ -28,7 +28,9 @@ interface RolesResponse {
 }
 
 interface RoleResponse {
-	role: Role;
+	data: {
+		role: Role;
+	};
 }
 
 export interface PermissionGroup {
@@ -87,7 +89,7 @@ export const rolesApi = {
 	async getRole(id: string): Promise<Role> {
 		try {
 			const response = await apiClient.get<RoleResponse>(`/roles/${id}`);
-			return response.role;
+			return response.data.role;
 		} catch (error) {
 			if (error instanceof ApiError && error.isNotFound()) {
 				throw new Error('角色不存在');
@@ -102,7 +104,7 @@ export const rolesApi = {
 	async getRoleByKey(key: string): Promise<Role | null> {
 		try {
 			const response = await apiClient.get<RoleResponse>(`/roles/${key}`);
-			return response.role;
+			return response.data.role;
 		} catch (error) {
 			if (error instanceof ApiError && error.isNotFound()) {
 				return null;
@@ -117,7 +119,7 @@ export const rolesApi = {
 	async createRole(data: CreateRoleData): Promise<Role> {
 		try {
 			const response = await apiClient.post<RoleResponse>('/roles', data);
-			return response.role;
+			return response.data.role;
 		} catch (error) {
 			if (error instanceof ApiError) {
 				throw new Error(ERROR_MESSAGES[error.message] || error.message);
@@ -132,7 +134,7 @@ export const rolesApi = {
 	async updateRole(id: string, data: UpdateRoleData): Promise<Role> {
 		try {
 			const response = await apiClient.patch<RoleResponse>(`/roles/${id}`, data);
-			return response.role;
+			return response.data.role;
 		} catch (error) {
 			if (error instanceof ApiError) {
 				if (error.isNotFound()) {
@@ -172,7 +174,7 @@ export const rolesApi = {
 	async getRolePermissions(roleKey: string): Promise<string[]> {
 		try {
 			const response = await apiClient.get<RoleResponse>(`/roles/${roleKey}`);
-			return response.role.permissions;
+			return response.data.role.permissions;
 		} catch {
 			return [];
 		}
