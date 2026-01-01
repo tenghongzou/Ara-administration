@@ -227,8 +227,7 @@ export const subscriptionsApi = {
 			};
 		}
 
-		const response = await apiClient.get<{ data: SubscriptionStats }>('/subscriptions/stats');
-		const data = response.data || (response as unknown as SubscriptionStats);
+		const data = await apiClient.get<SubscriptionStats>('/subscriptions/stats');
 		return {
 			totalMonthly: data.totalMonthly ?? 0,
 			totalYearly: data.totalYearly ?? 0,
@@ -249,10 +248,7 @@ export const subscriptionsApi = {
 				.filter((s): s is Subscription => s !== undefined);
 		}
 
-		const response = await apiClient.get<{ data: Subscription[] }>(
-			`/subscriptions/upcoming?days=${days}`
-		);
-		return response.data || [];
+		return apiClient.get<Subscription[]>(`/subscriptions/upcoming?days=${days}`);
 	},
 
 	/**
@@ -269,10 +265,7 @@ export const subscriptionsApi = {
 			}));
 		}
 
-		const response = await apiClient.get<{ data: UpcomingReminder[] }>(
-			`/subscriptions/reminders?days=${days}`
-		);
-		return response.data || [];
+		return apiClient.get<UpcomingReminder[]>(`/subscriptions/reminders?days=${days}`);
 	},
 
 	/**
@@ -283,10 +276,7 @@ export const subscriptionsApi = {
 			return mockSubscriptionsApi.getPaymentHistory(subscriptionId);
 		}
 
-		const response = await apiClient.get<{ data: PaymentHistory[] }>(
-			`/subscriptions/${subscriptionId}/payments`
-		);
-		return response.data || [];
+		return apiClient.get<PaymentHistory[]>(`/subscriptions/${subscriptionId}/payments`);
 	},
 
 	/**
@@ -304,8 +294,7 @@ export const subscriptionsApi = {
 	 * 取得訂閱分析數據
 	 */
 	async getAnalytics(): Promise<AnalyticsData> {
-		const response = await apiClient.get<{ data: AnalyticsData }>('/subscriptions/analytics');
-		const data = response.data || (response as unknown as AnalyticsData);
+		const data = await apiClient.get<AnalyticsData>('/subscriptions/analytics');
 		return {
 			monthlyTrend: data.monthlyTrend || [],
 			categoryBreakdown: data.categoryBreakdown || [],
@@ -318,10 +307,9 @@ export const subscriptionsApi = {
 	 * 取得日曆視圖數據
 	 */
 	async getCalendarData(year: number, month: number): Promise<CalendarDayData[]> {
-		const response = await apiClient.get<{ data: CalendarDayData[] }>(
+		return apiClient.get<CalendarDayData[]>(
 			`/subscriptions/calendar?year=${year}&month=${month + 1}`
 		);
-		return response.data || [];
 	},
 
 	/**

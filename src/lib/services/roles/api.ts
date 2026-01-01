@@ -27,11 +27,7 @@ interface RolesResponse {
 	};
 }
 
-interface RoleResponse {
-	data: {
-		role: Role;
-	};
-}
+// apiClient 自動解包 data，因此類型定義直接反映解包後的結構
 
 export interface PermissionGroup {
 	key: string;
@@ -88,8 +84,8 @@ export const rolesApi = {
 	 */
 	async getRole(id: string): Promise<Role> {
 		try {
-			const response = await apiClient.get<RoleResponse>(`/roles/${id}`);
-			return response.data.role;
+			const response = await apiClient.get<{ role: Role }>(`/roles/${id}`);
+			return response.role;
 		} catch (error) {
 			if (error instanceof ApiError && error.isNotFound()) {
 				throw new Error('角色不存在');
@@ -103,8 +99,8 @@ export const rolesApi = {
 	 */
 	async getRoleByKey(key: string): Promise<Role | null> {
 		try {
-			const response = await apiClient.get<RoleResponse>(`/roles/${key}`);
-			return response.data.role;
+			const response = await apiClient.get<{ role: Role }>(`/roles/${key}`);
+			return response.role;
 		} catch (error) {
 			if (error instanceof ApiError && error.isNotFound()) {
 				return null;
@@ -118,8 +114,8 @@ export const rolesApi = {
 	 */
 	async createRole(data: CreateRoleData): Promise<Role> {
 		try {
-			const response = await apiClient.post<RoleResponse>('/roles', data);
-			return response.data.role;
+			const response = await apiClient.post<{ role: Role }>('/roles', data);
+			return response.role;
 		} catch (error) {
 			if (error instanceof ApiError) {
 				throw new Error(ERROR_MESSAGES[error.message] || error.message);
@@ -133,8 +129,8 @@ export const rolesApi = {
 	 */
 	async updateRole(id: string, data: UpdateRoleData): Promise<Role> {
 		try {
-			const response = await apiClient.patch<RoleResponse>(`/roles/${id}`, data);
-			return response.data.role;
+			const response = await apiClient.patch<{ role: Role }>(`/roles/${id}`, data);
+			return response.role;
 		} catch (error) {
 			if (error instanceof ApiError) {
 				if (error.isNotFound()) {
@@ -173,8 +169,8 @@ export const rolesApi = {
 	 */
 	async getRolePermissions(roleKey: string): Promise<string[]> {
 		try {
-			const response = await apiClient.get<RoleResponse>(`/roles/${roleKey}`);
-			return response.data.role.permissions;
+			const response = await apiClient.get<{ role: Role }>(`/roles/${roleKey}`);
+			return response.role.permissions;
 		} catch {
 			return [];
 		}
@@ -184,15 +180,13 @@ export const rolesApi = {
 	 * 獲取所有權限（按分組）
 	 */
 	async getPermissions(): Promise<PermissionGroup[]> {
-		const response = await apiClient.get<{ data: PermissionGroup[] }>('/permissions');
-		return response.data;
+		return apiClient.get<PermissionGroup[]>('/permissions');
 	},
 
 	/**
 	 * 獲取所有權限（扁平列表）
 	 */
 	async getPermissionsFlat(): Promise<Permission[]> {
-		const response = await apiClient.get<{ data: Permission[] }>('/permissions/flat');
-		return response.data;
+		return apiClient.get<Permission[]>('/permissions/flat');
 	}
 };

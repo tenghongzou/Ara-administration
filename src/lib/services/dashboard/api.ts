@@ -21,8 +21,7 @@ export const dashboardApi = {
 			return mockDashboardApi.getStats();
 		}
 
-		const response = await apiClient.get<{ data: DashboardStats }>('/dashboard/stats');
-		return response.data;
+		return apiClient.get<DashboardStats>('/dashboard/stats');
 	},
 
 	/**
@@ -33,10 +32,7 @@ export const dashboardApi = {
 			return mockDashboardApi.getRecentActivities();
 		}
 
-		const response = await apiClient.get<{ data: DashboardActivity[] }>(
-			`/dashboard/recent-activities?limit=${limit}`
-		);
-		return response.data || [];
+		return apiClient.get<DashboardActivity[]>(`/dashboard/recent-activities?limit=${limit}`);
 	},
 
 	/**
@@ -70,20 +66,17 @@ export const dashboardApi = {
 			};
 		}
 
-		const response = await apiClient.get<{
-			data: {
-				quickStats: {
-					totalUsers: number;
-					activeUsers: number;
-					newUsersThisMonth: number;
-					totalSubscriptions: number;
-					activeSubscriptions: number;
-					monthlySpending: number;
-					actionsToday: number;
-				};
-				generatedAt: string;
+		return apiClient.get<{
+			quickStats: {
+				totalUsers: number;
+				activeUsers: number;
+				newUsersThisMonth: number;
+				totalSubscriptions: number;
+				activeSubscriptions: number;
+				monthlySpending: number;
+				actionsToday: number;
 			};
+			generatedAt: string;
 		}>('/dashboard/overview');
-		return response.data;
 	}
 };

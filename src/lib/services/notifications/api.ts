@@ -68,8 +68,7 @@ export const notificationApi = {
 	 */
 	async getNotification(id: string): Promise<Notification> {
 		try {
-			const response = await apiClient.get<{ data: Notification }>(`/notifications/${id}`);
-			return response.data;
+			return await apiClient.get<Notification>(`/notifications/${id}`);
 		} catch (error) {
 			if (error instanceof ApiError && error.isNotFound()) {
 				throw new Error('通知不存在');
@@ -82,16 +81,15 @@ export const notificationApi = {
 	 * 取得未讀通知數量
 	 */
 	async getUnreadCount(): Promise<number> {
-		const response = await apiClient.get<{ data: UnreadCountResponse }>('/notifications/unread-count');
-		return response.data?.count ?? 0;
+		const response = await apiClient.get<UnreadCountResponse>('/notifications/unread-count');
+		return response?.count ?? 0;
 	},
 
 	/**
 	 * 取得通知統計
 	 */
 	async getStatistics(): Promise<NotificationStatistics> {
-		const response = await apiClient.get<{ data: NotificationStatistics }>('/notifications/statistics');
-		return response.data;
+		return apiClient.get<NotificationStatistics>('/notifications/statistics');
 	},
 
 	/**
@@ -99,10 +97,7 @@ export const notificationApi = {
 	 */
 	async markAsRead(notificationId: string): Promise<Notification> {
 		try {
-			const response = await apiClient.post<{ data: Notification }>(
-				`/notifications/${notificationId}/read`
-			);
-			return response.data;
+			return await apiClient.post<Notification>(`/notifications/${notificationId}/read`);
 		} catch (error) {
 			if (error instanceof ApiError && error.isNotFound()) {
 				throw new Error('通知不存在');
@@ -143,19 +138,14 @@ export const notificationApi = {
 	 * 取得通知設定
 	 */
 	async getSettings(): Promise<NotificationSettings> {
-		const response = await apiClient.get<{ data: NotificationSettings }>('/notifications/settings');
-		return response.data;
+		return apiClient.get<NotificationSettings>('/notifications/settings');
 	},
 
 	/**
 	 * 更新通知設定
 	 */
 	async updateSettings(settings: Partial<NotificationSettings>): Promise<NotificationSettings> {
-		const response = await apiClient.patch<{ data: NotificationSettings }>(
-			'/notifications/settings',
-			settings
-		);
-		return response.data;
+		return apiClient.patch<NotificationSettings>('/notifications/settings', settings);
 	},
 
 	/**

@@ -46,6 +46,7 @@ export interface UpdateUserData {
 	birthday?: string;
 }
 
+// 分頁響應保持完整結構（apiClient 不會自動解包有 pagination 的響應）
 interface UsersResponse {
 	data: User[];
 	pagination: {
@@ -53,12 +54,6 @@ interface UsersResponse {
 		pageSize: number;
 		total: number;
 		totalPages: number;
-	};
-}
-
-interface UserResponse {
-	data: {
-		user: User;
 	};
 }
 
@@ -114,8 +109,9 @@ export const usersApi = {
 		}
 
 		try {
-			const response = await apiClient.get<UserResponse>(`/users/${id}`);
-			return response.data.user;
+			// apiClient 自動解包 data，返回 { user: User }
+			const response = await apiClient.get<{ user: User }>(`/users/${id}`);
+			return response.user;
 		} catch (error) {
 			if (error instanceof ApiError && error.isNotFound()) {
 				throw new Error('使用者不存在');
@@ -133,8 +129,8 @@ export const usersApi = {
 		}
 
 		try {
-			const response = await apiClient.post<UserResponse>('/users', data);
-			return response.data.user;
+			const response = await apiClient.post<{ user: User }>('/users', data);
+			return response.user;
 		} catch (error) {
 			if (error instanceof ApiError) {
 				throw new Error(ERROR_MESSAGES[error.message] || error.message);
@@ -152,8 +148,8 @@ export const usersApi = {
 		}
 
 		try {
-			const response = await apiClient.patch<UserResponse>(`/users/${id}`, data);
-			return response.data.user;
+			const response = await apiClient.patch<{ user: User }>(`/users/${id}`, data);
+			return response.user;
 		} catch (error) {
 			if (error instanceof ApiError) {
 				if (error.isNotFound()) {
@@ -224,10 +220,10 @@ export const usersApi = {
 		const formData = new FormData();
 		formData.append('avatar', file);
 
-		const response = await apiClient.upload<{ data: { avatarUrl: string } }>(
+		const response = await apiClient.upload<{ avatarUrl: string }>(
 			`/users/${id}/avatar`,
 			formData
 		);
-		return response.data.avatarUrl;
+		return response.avatarUrl;
 	}
 };

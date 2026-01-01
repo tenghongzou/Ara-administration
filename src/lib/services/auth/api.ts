@@ -20,12 +20,6 @@ export interface LoginResponse {
 	token: string;
 }
 
-export interface PermissionsResponse {
-	data: {
-		permissions: string[];
-	};
-}
-
 // ============================================================================
 // Error Messages
 // ============================================================================
@@ -47,17 +41,16 @@ export const authApi = {
 	 */
 	async login(data: LoginRequest): Promise<LoginResponse> {
 		try {
-			const response = await apiClient.post<{ data: LoginResponse }>('/auth/login', data, {
-				skipAuth: true // 登入不需要帶 token
+			// apiClient 自動解包 data，直接返回 LoginResponse
+			const response = await apiClient.post<LoginResponse>('/auth/login', data, {
+				skipAuth: true
 			});
 
-			const result = response.data;
-			// 登入成功後儲存 token
-			if (result.token) {
-				apiClient.setToken(result.token);
+			if (response.token) {
+				apiClient.setToken(response.token);
 			}
 
-			return result;
+			return response;
 		} catch (error) {
 			if (error instanceof ApiError) {
 				throw new Error(ERROR_MESSAGES[error.message] || error.message);
@@ -83,16 +76,15 @@ export const authApi = {
 	 * 取得目前登入的使用者
 	 */
 	async getCurrentUser(): Promise<{ user: User }> {
-		const response = await apiClient.get<{ data: { user: User } }>('/auth/me');
-		return response.data;
+		return apiClient.get<{ user: User }>('/auth/me');
 	},
 
 	/**
 	 * 取得使用者權限列表
 	 */
 	async getPermissions(): Promise<string[]> {
-		const response = await apiClient.get<PermissionsResponse>('/auth/permissions');
-		return response.data?.permissions || [];
+		const response = await apiClient.get<{ permissions: string[] }>('/auth/permissions');
+		return response.permissions || [];
 	},
 
 	/**
@@ -140,8 +132,8 @@ export const authApi = {
 	 */
 	async updateProfile(userId: string, data: UpdateProfileData): Promise<User> {
 		try {
-			const response = await apiClient.patch<{ data: { user: User } }>(`/users/${userId}`, data);
-			return response.data.user;
+			const response = await apiClient.patch<{ user: User }>(`/users/${userId}`, data);
+			return response.user;
 		} catch (error) {
 			if (error instanceof ApiError && error.message.includes('email')) {
 				throw new Error('此電子郵件已被使用');
@@ -157,10 +149,10 @@ export const authApi = {
 		const formData = new FormData();
 		formData.append('avatar', file);
 
-		const response = await apiClient.upload<{ data: { avatarUrl: string } }>(
+		const response = await apiClient.upload<{ avatarUrl: string }>(
 			`/users/${userId}/avatar`,
 			formData
 		);
-		return response.data.avatarUrl;
+		return response.avatarUrl;
 	}
 };

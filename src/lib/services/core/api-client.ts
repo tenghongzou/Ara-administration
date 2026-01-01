@@ -407,7 +407,15 @@ class ApiClient {
 		}
 
 		try {
-			return JSON.parse(text) as T;
+			const json = JSON.parse(text);
+
+			// 自動解包 data 屬性（符合業界標準的 Response Interceptor 模式）
+			// 但保留分頁響應的完整結構 { data: [...], pagination: {...} }
+			if (json && typeof json === 'object' && 'data' in json && !('pagination' in json)) {
+				return json.data as T;
+			}
+
+			return json as T;
 		} catch {
 			return {} as T;
 		}
