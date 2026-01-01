@@ -1,12 +1,21 @@
 <script lang="ts">
 	import { config } from '$lib/constants';
 	import { PageContainer } from '$lib/components/layout';
-	import { hasPermission } from '$lib/stores/auth';
+	import { userPermissions, checkPermissionInList } from '$lib/stores/auth';
 	import { defaultSettingsModules, settingsGroups } from '$lib/modules/settings';
 
-	// Filter modules based on user permissions
+	// Use reactive store for permissions
+	let permissions = $state<readonly string[]>([]);
+	$effect(() => {
+		const unsubscribe = userPermissions.subscribe((p) => {
+			permissions = p;
+		});
+		return unsubscribe;
+	});
+
+	// Filter modules based on user permissions (now reactive)
 	let modules = $derived(
-		defaultSettingsModules.filter((m) => !m.permission || hasPermission(m.permission))
+		defaultSettingsModules.filter((m) => !m.permission || checkPermissionInList(permissions, m.permission))
 	);
 
 	// Group modules by their group id

@@ -2,7 +2,14 @@
 	import type { Snippet } from 'svelte';
 	import type { UserRole } from '$lib/types';
 	import type { Permission } from '$lib/permissions';
-	import { userRole, hasPermission, hasAnyPermission, hasAllPermissions, hasRole } from '$lib/stores/auth';
+	import {
+		userRole,
+		userPermissions,
+		checkPermissionInList,
+		checkAnyPermissionInList,
+		checkAllPermissionsInList,
+		checkRole
+	} from '$lib/stores/auth';
 
 	interface Props {
 		/** 單一權限檢查 */
@@ -28,27 +35,28 @@
 		children
 	}: Props = $props();
 
-	// 使用 userRole 來觸發響應式更新
+	// 響應式權限和角色檢查
 	let allowed = $derived.by(() => {
-		// 訂閱 userRole 以確保在角色變化時重新計算
-		const _ = $userRole;
+		// 使用 $ 前綴訂閱 stores 以確保響應式
+		const currentRole = $userRole;
+		const currentPermissions = $userPermissions;
 
 		// 角色檢查
 		if (role) {
-			return hasRole(role);
+			return checkRole(currentRole, role);
 		}
 
 		// 單一權限檢查
 		if (permission) {
-			return hasPermission(permission);
+			return checkPermissionInList(currentPermissions, permission);
 		}
 
 		// 多權限檢查
 		if (permissions && permissions.length > 0) {
 			if (mode === 'all') {
-				return hasAllPermissions(permissions);
+				return checkAllPermissionsInList(currentPermissions, permissions);
 			}
-			return hasAnyPermission(permissions);
+			return checkAnyPermissionInList(currentPermissions, permissions);
 		}
 
 		// 未指定任何權限條件，預設允許

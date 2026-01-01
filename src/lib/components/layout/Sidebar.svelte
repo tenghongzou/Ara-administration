@@ -3,7 +3,7 @@
 	import { page } from '$app/stores';
 	import { cn } from '$lib/utils';
 	import { ui } from '$lib/stores/ui';
-	import { auth, currentUser, hasPermission } from '$lib/stores/auth';
+	import { auth, currentUser, userPermissions, checkPermissionInList } from '$lib/stores/auth';
 	import { authApi } from '$lib/services';
 	import { config } from '$lib/constants';
 	import type { Permission } from '$lib/permissions';
@@ -24,18 +24,27 @@
 
 	let { items, class: className = '' }: Props = $props();
 
-	// Filter items based on permissions
-	function filterByPermission(navItems: NavItem[]): NavItem[] {
+	// Reactive permissions
+	let permissions = $state<readonly string[]>([]);
+	$effect(() => {
+		const unsubscribe = userPermissions.subscribe((p) => {
+			permissions = p;
+		});
+		return unsubscribe;
+	});
+
+	// Filter items based on permissions (now reactive)
+	function filterByPermission(navItems: NavItem[], perms: readonly string[]): NavItem[] {
 		return navItems
-			.filter((item) => !item.permission || hasPermission(item.permission))
+			.filter((item) => !item.permission || checkPermissionInList(perms, item.permission))
 			.map((item) => ({
 				...item,
-				children: item.children ? filterByPermission(item.children) : undefined
+				children: item.children ? filterByPermission(item.children, perms) : undefined
 			}))
 			.filter((item) => !item.children || item.children.length > 0);
 	}
 
-	let visibleItems = $derived(filterByPermission(items));
+	let visibleItems = $derived(filterByPermission(items, permissions));
 
 	let sidebarOpen = $state(true);
 	let isMobile = $state(false);

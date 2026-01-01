@@ -5,10 +5,9 @@
 	import { rolesApi } from '$lib/services';
 	import type { Role } from '$lib/types';
 	import { toast } from '$lib/stores/toast';
-	import { auth } from '$lib/stores/auth';
+	import { auth, userPermissions, checkPermissionInList } from '$lib/stores/auth';
 	import { PageContainer } from '$lib/components/layout';
 	import { Button } from '$lib/components/ui';
-	import { hasPermission } from '$lib/stores/auth';
 	import { RoleDetailContent, type RoleFormData, type RoleFormErrors } from '$lib/modules/roles';
 
 	let role = $state<Role | null>(null);
@@ -26,8 +25,17 @@
 	let selectedPermissions = $state<Set<string>>(new Set());
 	let hasChanges = $state(false);
 
+	// Reactive permissions
+	let permissions = $state<readonly string[]>([]);
+	$effect(() => {
+		const unsubscribe = userPermissions.subscribe((p) => {
+			permissions = p;
+		});
+		return unsubscribe;
+	});
+
 	const roleId = $derived($page.params.id);
-	const canEdit = $derived(hasPermission('roles:update') && role && !(role.isSystem && role.key === 'admin') ? true : undefined);
+	const canEdit = $derived(checkPermissionInList(permissions, 'roles:update') && role && !(role.isSystem && role.key === 'admin') ? true : undefined);
 	const isAdminRole = $derived(role?.isSystem && role?.key === 'admin');
 
 	async function loadRole() {
