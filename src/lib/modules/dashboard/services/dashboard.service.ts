@@ -123,6 +123,8 @@ class DashboardService {
 				return { variant: 'warning', label: '今日到期' };
 			case 'due_soon':
 				return { variant: 'default', label: '即將到期' };
+			default:
+				return { variant: 'default', label: '提醒' };
 		}
 	}
 
