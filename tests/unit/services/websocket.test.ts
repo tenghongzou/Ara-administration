@@ -229,12 +229,10 @@ describe('WebSocket Service', () => {
 				}
 			});
 
-			expect(mockNotificationsAdd).toHaveBeenCalledWith({
-				type: 'info',
-				title: 'Test Title',
-				message: 'Test Message',
-				link: '/test'
-			});
+			expect(mockNotificationsAdd).toHaveBeenCalledWith(
+				{ type: 'info', title: 'Test Title', message: 'Test Message', link: '/test' },
+				{ source: 'remote' }
+			);
 		});
 	});
 
@@ -339,7 +337,7 @@ describe('WebSocket Service', () => {
 
 			expect(mockWebSocketInstance?.send).toHaveBeenCalled();
 			const sentData = JSON.parse(mockWebSocketInstance?.send.mock.calls[0][0]);
-			expect(sentData.type).toBe('ping');
+			expect(sentData.type).toBe('Ping');
 		});
 
 		it('should handle pong response', () => {
