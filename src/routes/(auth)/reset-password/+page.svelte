@@ -5,6 +5,7 @@
 	import { authApi } from '$lib/services';
 	import { toast } from '$lib/stores/toast';
 	import { Button, PasswordInput, ThemeToggle } from '$lib/components/ui';
+	import { passwordService } from '$lib/modules/account/services/password.service';
 
 	// 從 URL 取得 token
 	let token = $derived($page.url.searchParams.get('token') || '');
@@ -43,13 +44,10 @@
 			return false;
 		}
 
-		if (newPassword.length < 6) {
-			passwordError = '密碼至少需要 6 個字元';
+		const validation = passwordService.validatePassword(newPassword);
+		if (!validation.isValid) {
+			passwordError = '密碼需要 8 個以上字元，包含大小寫字母和數字';
 			return false;
-		}
-
-		if (newPassword.length < 8) {
-			passwordError = '建議密碼至少 8 個字元以提高安全性';
 		}
 
 		if (!confirmPassword) {

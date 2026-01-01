@@ -6,6 +6,7 @@
 	import { toast } from '$lib/stores/toast';
 	import { PageContainer } from '$lib/components/layout';
 	import { Button, Input, Select, Card, PasswordInput } from '$lib/components/ui';
+	import { passwordService } from '$lib/modules/account/services/password.service';
 
 	let name = $state('');
 	let email = $state('');
@@ -37,8 +38,11 @@
 
 		if (!password) {
 			newErrors.password = '請輸入密碼';
-		} else if (password.length < 6) {
-			newErrors.password = '密碼至少需要 6 個字元';
+		} else {
+			const validation = passwordService.validatePassword(password);
+			if (!validation.isValid) {
+				newErrors.password = '密碼需要 8 個以上字元，包含大小寫字母和數字';
+			}
 		}
 
 		if (password !== confirmPassword) {
@@ -108,7 +112,7 @@
 						<PasswordInput
 							bind:value={password}
 							label="密碼"
-							placeholder="至少 6 個字元"
+							placeholder="8 個以上字元，含大小寫及數字"
 							required
 							showStrength
 							error={errors.password}
