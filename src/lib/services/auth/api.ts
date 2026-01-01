@@ -4,7 +4,11 @@
  */
 
 import type { User, UpdateProfileData } from '$lib/types';
-import { httpClient, HttpError } from '../core/http-client';
+import { apiClient, ApiError } from '../core/api-client';
+
+// ============================================================================
+// Types
+// ============================================================================
 
 export interface LoginRequest {
 	account: string; // 可以是 username 或 email
@@ -20,95 +24,136 @@ export interface PermissionsResponse {
 	permissions: string[];
 }
 
+// ============================================================================
+// Error Messages
+// ============================================================================
+
+const ERROR_MESSAGES: Record<string, string> = {
+	'Invalid credentials.': '帳號或密碼錯誤',
+	'Account is deactivated. Please contact administrator.': '帳號已停用，請聯絡管理員',
+	'Account is pending approval.': '帳號尚未審核通過',
+	'Account has been suspended. Please contact administrator.': '帳號已被停權，請聯絡管理員'
+};
+
+// ============================================================================
+// Auth API
+// ============================================================================
+
 export const authApi = {
+	/**
+	 * 使用者登入
+	 */
 	async login(data: LoginRequest): Promise<LoginResponse> {
 		try {
-			const response = await httpClient.post<LoginResponse>('/auth/login', data);
+			const response = await apiClient.post<LoginResponse>('/auth/login', data, {
+				skipAuth: true // 登入不需要帶 token
+			});
+
+			// 登入成功後儲存 token
+			if (response.token) {
+				apiClient.setToken(response.token);
+			}
+
 			return response;
 		} catch (error) {
-			if (error instanceof HttpError) {
-				// Map backend error messages to Chinese
-				const errorMessages: Record<string, string> = {
-					'Invalid credentials.': '帳號或密碼錯誤',
-					'Account is deactivated. Please contact administrator.': '帳號已停用，請聯絡管理員',
-					'Account is pending approval.': '帳號尚未審核通過',
-					'Account has been suspended. Please contact administrator.': '帳號已被停權，請聯絡管理員'
-				};
-				throw new Error(errorMessages[error.error] || error.error);
+			if (error instanceof ApiError) {
+				throw new Error(ERROR_MESSAGES[error.message] || error.message);
 			}
 			throw error;
 		}
 	},
 
+	/**
+	 * 使用者登出
+	 */
 	async logout(): Promise<void> {
 		try {
-			await httpClient.post('/auth/logout');
+			await apiClient.post('/auth/logout');
 		} catch {
 			// Ignore logout errors - we'll clear local state anyway
+		} finally {
+			apiClient.clearToken();
 		}
 	},
 
+	/**
+	 * 取得目前登入的使用者
+	 */
 	async getCurrentUser(): Promise<{ user: User }> {
-		return httpClient.get<{ user: User }>('/auth/me');
+		return apiClient.get<{ user: User }>('/auth/me');
 	},
 
+	/**
+	 * 取得使用者權限列表
+	 */
 	async getPermissions(): Promise<string[]> {
-		const response = await httpClient.get<PermissionsResponse>('/auth/permissions');
+		const response = await apiClient.get<PermissionsResponse>('/auth/permissions');
 		return response.permissions;
 	},
 
+	/**
+	 * 忘記密碼 - 發送重設密碼信件
+	 */
 	async forgotPassword(email: string): Promise<void> {
 		if (!email.includes('@')) {
 			throw new Error('無效的電子郵件格式');
 		}
-		await httpClient.post('/auth/forgot-password', { email });
+		await apiClient.post('/auth/forgot-password', { email }, { skipAuth: true });
 	},
 
+	/**
+	 * 重設密碼
+	 */
 	async resetPassword(token: string, newPassword: string): Promise<void> {
 		if (!token || newPassword.length < 6) {
 			throw new Error('密碼重設失敗');
 		}
-		await httpClient.post('/auth/reset-password', { token, newPassword });
+		await apiClient.post('/auth/reset-password', { token, newPassword }, { skipAuth: true });
 	},
 
+	/**
+	 * 變更密碼
+	 */
 	async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
 		if (newPassword.length < 6) {
 			throw new Error('新密碼至少需要 6 個字元');
 		}
 		try {
-			await httpClient.post(`/users/${userId}/change-password`, {
+			await apiClient.post(`/users/${userId}/change-password`, {
 				currentPassword,
 				newPassword
 			});
 		} catch (error) {
-			if (error instanceof HttpError) {
-				if (error.status === 400) {
-					throw new Error('目前密碼錯誤');
-				}
+			if (error instanceof ApiError && error.status === 400) {
+				throw new Error('目前密碼錯誤');
 			}
 			throw error;
 		}
 	},
 
+	/**
+	 * 更新個人資料
+	 */
 	async updateProfile(userId: string, data: UpdateProfileData): Promise<User> {
 		try {
-			const response = await httpClient.patch<{ user: User }>(`/users/${userId}`, data);
+			const response = await apiClient.patch<{ user: User }>(`/users/${userId}`, data);
 			return response.user;
 		} catch (error) {
-			if (error instanceof HttpError) {
-				if (error.error.includes('email')) {
-					throw new Error('此電子郵件已被使用');
-				}
+			if (error instanceof ApiError && error.message.includes('email')) {
+				throw new Error('此電子郵件已被使用');
 			}
 			throw error;
 		}
 	},
 
+	/**
+	 * 上傳頭像
+	 */
 	async uploadAvatar(userId: string, file: File): Promise<string> {
 		const formData = new FormData();
 		formData.append('avatar', file);
 
-		const response = await httpClient.upload<{ avatarUrl: string }>(
+		const response = await apiClient.upload<{ avatarUrl: string }>(
 			`/users/${userId}/avatar`,
 			formData
 		);

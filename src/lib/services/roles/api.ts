@@ -3,7 +3,11 @@
  */
 
 import type { Role, CreateRoleData, UpdateRoleData, PaginatedData } from '$lib/types';
-import { httpClient, HttpError } from '../core/http-client';
+import { apiClient, ApiError } from '../core/api-client';
+
+// ============================================================================
+// Types
+// ============================================================================
 
 export interface GetRolesParams {
 	page?: number;
@@ -41,7 +45,24 @@ export interface Permission {
 	groupLabel: string;
 }
 
+// ============================================================================
+// Error Messages
+// ============================================================================
+
+const ERROR_MESSAGES: Record<string, string> = {
+	'Role key already exists': '角色識別碼已存在',
+	'Fields key and label are required': '角色識別碼和名稱為必填',
+	'Cannot change key of system role': '無法修改系統角色的識別碼'
+};
+
+// ============================================================================
+// Roles API
+// ============================================================================
+
 export const rolesApi = {
+	/**
+	 * 取得角色列表
+	 */
 	async getRoles(params: GetRolesParams = {}): Promise<PaginatedData<Role>> {
 		const searchParams = new URLSearchParams();
 
@@ -52,7 +73,7 @@ export const rolesApi = {
 		if (params.sortDirection) searchParams.set('sortDirection', params.sortDirection);
 
 		const query = searchParams.toString();
-		const response = await httpClient.get<RolesResponse>(`/roles${query ? `?${query}` : ''}`);
+		const response = await apiClient.get<RolesResponse>(`/roles${query ? `?${query}` : ''}`);
 
 		return {
 			data: response.data,
@@ -60,77 +81,84 @@ export const rolesApi = {
 		};
 	},
 
+	/**
+	 * 取得單一角色
+	 */
 	async getRole(id: string): Promise<Role> {
 		try {
-			const response = await httpClient.get<RoleResponse>(`/roles/${id}`);
+			const response = await apiClient.get<RoleResponse>(`/roles/${id}`);
 			return response.role;
 		} catch (error) {
-			if (error instanceof HttpError && error.status === 404) {
+			if (error instanceof ApiError && error.isNotFound()) {
 				throw new Error('角色不存在');
 			}
 			throw error;
 		}
 	},
 
+	/**
+	 * 依識別碼取得角色
+	 */
 	async getRoleByKey(key: string): Promise<Role | null> {
 		try {
-			const response = await httpClient.get<RoleResponse>(`/roles/${key}`);
+			const response = await apiClient.get<RoleResponse>(`/roles/${key}`);
 			return response.role;
 		} catch (error) {
-			if (error instanceof HttpError && error.status === 404) {
+			if (error instanceof ApiError && error.isNotFound()) {
 				return null;
 			}
 			throw error;
 		}
 	},
 
+	/**
+	 * 建立角色
+	 */
 	async createRole(data: CreateRoleData): Promise<Role> {
 		try {
-			const response = await httpClient.post<RoleResponse>('/roles', data);
+			const response = await apiClient.post<RoleResponse>('/roles', data);
 			return response.role;
 		} catch (error) {
-			if (error instanceof HttpError) {
-				const errorMessages: Record<string, string> = {
-					'Role key already exists': '角色識別碼已存在',
-					'Fields key and label are required': '角色識別碼和名稱為必填'
-				};
-				throw new Error(errorMessages[error.error] || error.error);
+			if (error instanceof ApiError) {
+				throw new Error(ERROR_MESSAGES[error.message] || error.message);
 			}
 			throw error;
 		}
 	},
 
+	/**
+	 * 更新角色
+	 */
 	async updateRole(id: string, data: UpdateRoleData): Promise<Role> {
 		try {
-			const response = await httpClient.patch<RoleResponse>(`/roles/${id}`, data);
+			const response = await apiClient.patch<RoleResponse>(`/roles/${id}`, data);
 			return response.role;
 		} catch (error) {
-			if (error instanceof HttpError) {
-				if (error.status === 404) {
+			if (error instanceof ApiError) {
+				if (error.isNotFound()) {
 					throw new Error('角色不存在');
 				}
-				const errorMessages: Record<string, string> = {
-					'Role key already exists': '角色識別碼已存在',
-					'Cannot change key of system role': '無法修改系統角色的識別碼'
-				};
-				throw new Error(errorMessages[error.error] || error.error);
+				throw new Error(ERROR_MESSAGES[error.message] || error.message);
 			}
 			throw error;
 		}
 	},
 
+	/**
+	 * 刪除角色
+	 */
 	async deleteRole(id: string): Promise<void> {
 		try {
-			await httpClient.delete(`/roles/${id}`);
+			await apiClient.delete(`/roles/${id}`);
 		} catch (error) {
-			if (error instanceof HttpError) {
-				if (error.status === 404) {
+			if (error instanceof ApiError) {
+				if (error.isNotFound()) {
 					throw new Error('角色不存在');
 				}
-				if (error.error.includes('system role')) {
+				if (error.message.includes('system role')) {
 					throw new Error('無法刪除系統內建角色');
 				}
-				if (error.error.includes('assigned users')) {
+				if (error.message.includes('assigned users')) {
 					throw new Error('無法刪除：有使用者正在使用此角色，請先重新分配');
 				}
 			}
@@ -138,9 +166,12 @@ export const rolesApi = {
 		}
 	},
 
+	/**
+	 * 取得角色的權限列表
+	 */
 	async getRolePermissions(roleKey: string): Promise<string[]> {
 		try {
-			const response = await httpClient.get<RoleResponse>(`/roles/${roleKey}`);
+			const response = await apiClient.get<RoleResponse>(`/roles/${roleKey}`);
 			return response.role.permissions;
 		} catch {
 			return [];
@@ -151,7 +182,7 @@ export const rolesApi = {
 	 * 獲取所有權限（按分組）
 	 */
 	async getPermissions(): Promise<PermissionGroup[]> {
-		const response = await httpClient.get<{ data: PermissionGroup[] }>('/permissions');
+		const response = await apiClient.get<{ data: PermissionGroup[] }>('/permissions');
 		return response.data;
 	},
 
@@ -159,7 +190,7 @@ export const rolesApi = {
 	 * 獲取所有權限（扁平列表）
 	 */
 	async getPermissionsFlat(): Promise<Permission[]> {
-		const response = await httpClient.get<{ data: Permission[] }>('/permissions/flat');
+		const response = await apiClient.get<{ data: Permission[] }>('/permissions/flat');
 		return response.data;
 	}
 };

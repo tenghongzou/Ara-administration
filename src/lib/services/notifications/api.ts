@@ -4,7 +4,11 @@
  */
 
 import type { NotificationSettings, Notification, NotificationStatistics, PaginatedData } from '$lib/types';
-import { httpClient, HttpError } from '../core/http-client';
+import { apiClient, ApiError } from '../core/api-client';
+
+// ============================================================================
+// Types
+// ============================================================================
 
 export interface GetNotificationsParams {
 	page?: number;
@@ -27,6 +31,10 @@ interface UnreadCountResponse {
 	count: number;
 }
 
+// ============================================================================
+// Notification API
+// ============================================================================
+
 export const notificationApi = {
 	/**
 	 * 取得通知列表（分頁）
@@ -40,7 +48,7 @@ export const notificationApi = {
 		if (params.type) searchParams.set('type', params.type);
 
 		const query = searchParams.toString();
-		const response = await httpClient.get<NotificationsResponse>(
+		const response = await apiClient.get<NotificationsResponse>(
 			`/notifications${query ? `?${query}` : ''}`
 		);
 
@@ -60,10 +68,10 @@ export const notificationApi = {
 	 */
 	async getNotification(id: string): Promise<Notification> {
 		try {
-			const response = await httpClient.get<{ data: Notification }>(`/notifications/${id}`);
+			const response = await apiClient.get<{ data: Notification }>(`/notifications/${id}`);
 			return response.data;
 		} catch (error) {
-			if (error instanceof HttpError && error.status === 404) {
+			if (error instanceof ApiError && error.isNotFound()) {
 				throw new Error('通知不存在');
 			}
 			throw error;
@@ -74,7 +82,7 @@ export const notificationApi = {
 	 * 取得未讀通知數量
 	 */
 	async getUnreadCount(): Promise<number> {
-		const response = await httpClient.get<{ data: UnreadCountResponse }>('/notifications/unread-count');
+		const response = await apiClient.get<{ data: UnreadCountResponse }>('/notifications/unread-count');
 		return response.data?.count ?? 0;
 	},
 
@@ -82,7 +90,7 @@ export const notificationApi = {
 	 * 取得通知統計
 	 */
 	async getStatistics(): Promise<NotificationStatistics> {
-		const response = await httpClient.get<{ data: NotificationStatistics }>('/notifications/statistics');
+		const response = await apiClient.get<{ data: NotificationStatistics }>('/notifications/statistics');
 		return response.data;
 	},
 
@@ -91,12 +99,12 @@ export const notificationApi = {
 	 */
 	async markAsRead(notificationId: string): Promise<Notification> {
 		try {
-			const response = await httpClient.post<{ data: Notification }>(
+			const response = await apiClient.post<{ data: Notification }>(
 				`/notifications/${notificationId}/read`
 			);
 			return response.data;
 		} catch (error) {
-			if (error instanceof HttpError && error.status === 404) {
+			if (error instanceof ApiError && error.isNotFound()) {
 				throw new Error('通知不存在');
 			}
 			throw error;
@@ -107,7 +115,7 @@ export const notificationApi = {
 	 * 標記所有通知為已讀
 	 */
 	async markAllAsRead(): Promise<void> {
-		await httpClient.post('/notifications/mark-all-read');
+		await apiClient.post('/notifications/mark-all-read');
 	},
 
 	/**
@@ -115,9 +123,9 @@ export const notificationApi = {
 	 */
 	async deleteNotification(notificationId: string): Promise<void> {
 		try {
-			await httpClient.delete(`/notifications/${notificationId}`);
+			await apiClient.delete(`/notifications/${notificationId}`);
 		} catch (error) {
-			if (error instanceof HttpError && error.status === 404) {
+			if (error instanceof ApiError && error.isNotFound()) {
 				throw new Error('通知不存在');
 			}
 			throw error;
@@ -128,14 +136,14 @@ export const notificationApi = {
 	 * 清除所有通知
 	 */
 	async clearAllNotifications(): Promise<void> {
-		await httpClient.delete('/notifications/clear');
+		await apiClient.delete('/notifications/clear');
 	},
 
 	/**
 	 * 取得通知設定
 	 */
 	async getSettings(): Promise<NotificationSettings> {
-		const response = await httpClient.get<{ data: NotificationSettings }>('/notifications/settings');
+		const response = await apiClient.get<{ data: NotificationSettings }>('/notifications/settings');
 		return response.data;
 	},
 
@@ -143,7 +151,7 @@ export const notificationApi = {
 	 * 更新通知設定
 	 */
 	async updateSettings(settings: Partial<NotificationSettings>): Promise<NotificationSettings> {
-		const response = await httpClient.patch<{ data: NotificationSettings }>(
+		const response = await apiClient.patch<{ data: NotificationSettings }>(
 			'/notifications/settings',
 			settings
 		);

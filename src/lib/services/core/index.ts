@@ -1,2 +1,2 @@
 export * from './api-base';
-export * from './http-client';
+export * from './api-client';

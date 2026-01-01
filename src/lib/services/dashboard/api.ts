@@ -4,9 +4,13 @@
  */
 
 import type { DashboardStats, DashboardActivity } from '$lib/types';
-import { httpClient } from '../core/http-client';
+import { apiClient } from '../core/api-client';
 import { config } from '$lib/constants';
 import { mockDashboardApi } from '$lib/mock';
+
+// ============================================================================
+// Dashboard API
+// ============================================================================
 
 export const dashboardApi = {
 	/**
@@ -17,7 +21,7 @@ export const dashboardApi = {
 			return mockDashboardApi.getStats();
 		}
 
-		const response = await httpClient.get<{ data: DashboardStats }>('/dashboard/stats');
+		const response = await apiClient.get<{ data: DashboardStats }>('/dashboard/stats');
 		return response.data;
 	},
 
@@ -29,7 +33,7 @@ export const dashboardApi = {
 			return mockDashboardApi.getRecentActivities();
 		}
 
-		const response = await httpClient.get<{ data: DashboardActivity[] }>(
+		const response = await apiClient.get<{ data: DashboardActivity[] }>(
 			`/dashboard/recent-activities?limit=${limit}`
 		);
 		return response.data || [];
@@ -66,7 +70,7 @@ export const dashboardApi = {
 			};
 		}
 
-		const response = await httpClient.get<{
+		const response = await apiClient.get<{
 			data: {
 				quickStats: {
 					totalUsers: number;
