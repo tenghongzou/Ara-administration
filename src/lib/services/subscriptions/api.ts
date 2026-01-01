@@ -40,14 +40,6 @@ interface SubscriptionsResponse {
 	};
 }
 
-interface SubscriptionResponse {
-	subscription: Subscription;
-}
-
-interface PaymentResponse {
-	payment: PaymentHistory;
-}
-
 export interface UpcomingReminder {
 	subscription: Subscription;
 	daysUntilBilling: number;
@@ -144,8 +136,7 @@ export const subscriptionsApi = {
 		}
 
 		try {
-			const response = await apiClient.get<SubscriptionResponse>(`/subscriptions/${id}`);
-			return response.subscription;
+			return await apiClient.get<Subscription>(`/subscriptions/${id}`);
 		} catch (error) {
 			if (error instanceof ApiError && error.isNotFound()) {
 				throw new Error('訂閱不存在');
@@ -163,8 +154,7 @@ export const subscriptionsApi = {
 		}
 
 		try {
-			const response = await apiClient.post<SubscriptionResponse>('/subscriptions', data);
-			return response.subscription;
+			return await apiClient.post<Subscription>('/subscriptions', data);
 		} catch (error) {
 			if (error instanceof ApiError) {
 				throw new Error(error.message || '建立訂閱失敗');
@@ -182,8 +172,7 @@ export const subscriptionsApi = {
 		}
 
 		try {
-			const response = await apiClient.patch<SubscriptionResponse>(`/subscriptions/${id}`, data);
-			return response.subscription;
+			return await apiClient.patch<Subscription>(`/subscriptions/${id}`, data);
 		} catch (error) {
 			if (error instanceof ApiError) {
 				if (error.isNotFound()) {
@@ -283,11 +272,10 @@ export const subscriptionsApi = {
 	 * 新增付款記錄
 	 */
 	async createPayment(subscriptionId: string, data: CreatePaymentData): Promise<PaymentHistory> {
-		const response = await apiClient.post<PaymentResponse>(
+		return apiClient.post<PaymentHistory>(
 			`/subscriptions/${subscriptionId}/payments`,
 			data
 		);
-		return response.payment;
 	},
 
 	/**

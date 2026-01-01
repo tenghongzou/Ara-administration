@@ -84,8 +84,7 @@ export const logsApi = {
 		}
 
 		try {
-			const response = await apiClient.get<{ data: AuditLog }>(`/audit-logs/${id}`);
-			return response.data;
+			return await apiClient.get<AuditLog>(`/audit-logs/${id}`);
 		} catch (error) {
 			if (error instanceof ApiError && error.isNotFound()) {
 				throw new Error('審計日誌不存在');
@@ -102,10 +101,7 @@ export const logsApi = {
 			return mockLogsApi.getRecentLogs(limit);
 		}
 
-		const response = await apiClient.get<{ data: AuditLog[] }>(
-			`/audit-logs/recent?limit=${limit}`
-		);
-		return response.data || [];
+		return apiClient.get<AuditLog[]>(`/audit-logs/recent?limit=${limit}`);
 	},
 
 	/**
@@ -116,10 +112,7 @@ export const logsApi = {
 			return mockLogsApi.getStatistics();
 		}
 
-		const response = await apiClient.get<{ data: AuditLogStatistics }>(
-			`/audit-logs/statistics?days=${days}`
-		);
-		return response.data;
+		return apiClient.get<AuditLogStatistics>(`/audit-logs/statistics?days=${days}`);
 	},
 
 	/**
@@ -135,8 +128,7 @@ export const logsApi = {
 			};
 		}
 
-		const response = await apiClient.get<{ data: AuditLogFilters }>('/audit-logs/filters');
-		return response.data;
+		return apiClient.get<AuditLogFilters>('/audit-logs/filters');
 	},
 
 	/**
@@ -148,10 +140,9 @@ export const logsApi = {
 			return result.data.filter((log) => log.resourceId === resourceId).slice(0, limit);
 		}
 
-		const response = await apiClient.get<{ data: AuditLog[] }>(
+		return apiClient.get<AuditLog[]>(
 			`/audit-logs/resource/${resource}/${resourceId}?limit=${limit}`
 		);
-		return response.data || [];
 	},
 
 	/**
@@ -164,10 +155,7 @@ export const logsApi = {
 			return result.data.slice(0, limit);
 		}
 
-		const response = await apiClient.get<{ data: AuditLog[] }>(
-			`/audit-logs/my-activity?limit=${limit}`
-		);
-		return response.data || [];
+		return apiClient.get<AuditLog[]>(`/audit-logs/my-activity?limit=${limit}`);
 	}
 };
 
