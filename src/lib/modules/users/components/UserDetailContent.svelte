@@ -2,7 +2,8 @@
 	import type { User, UserRole, UserStatus } from '$lib/types';
 	import { Spinner, Button, Input, Select, Card, Badge, PasswordInput } from '$lib/components/ui';
 	import { statusLabels, statusColors } from '../types';
-	import { usersService } from '../services/users.service';
+	import { usersApi } from '$lib/services';
+	import { toast } from '$lib/stores/toast';
 
 	interface Props {
 		user: User | null;
@@ -37,6 +38,55 @@
 		onSubmit,
 		onCancel
 	}: Props = $props();
+
+	// Password change state
+	let newPassword = $state('');
+	let confirmPassword = $state('');
+	let passwordErrors = $state<Record<string, string>>({});
+	let changingPassword = $state(false);
+
+	function validatePassword(): boolean {
+		const errors: Record<string, string> = {};
+
+		if (!newPassword) {
+			errors.newPassword = '請輸入新密碼';
+		} else if (newPassword.length < 8) {
+			errors.newPassword = '密碼至少需要 8 個字元';
+		} else if (!/[A-Z]/.test(newPassword)) {
+			errors.newPassword = '密碼需包含至少一個大寫字母';
+		} else if (!/[a-z]/.test(newPassword)) {
+			errors.newPassword = '密碼需包含至少一個小寫字母';
+		} else if (!/[0-9]/.test(newPassword)) {
+			errors.newPassword = '密碼需包含至少一個數字';
+		}
+
+		if (!confirmPassword) {
+			errors.confirmPassword = '請確認新密碼';
+		} else if (newPassword !== confirmPassword) {
+			errors.confirmPassword = '兩次輸入的密碼不一致';
+		}
+
+		passwordErrors = errors;
+		return Object.keys(errors).length === 0;
+	}
+
+	async function handleChangePassword() {
+		if (!validatePassword() || !user) return;
+
+		changingPassword = true;
+		try {
+			await usersApi.changePassword(user.id, null, newPassword);
+			toast.success('密碼已變更');
+			newPassword = '';
+			confirmPassword = '';
+			passwordErrors = {};
+		} catch (error) {
+			const message = error instanceof Error ? error.message : '變更密碼失敗';
+			toast.error(message);
+		} finally {
+			changingPassword = false;
+		}
+	}
 
 	const roleOptions = [
 		{ value: 'admin', label: '系統管理員' },
@@ -213,24 +263,41 @@
 					<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">變更密碼</h3>
 				{/snippet}
 				{#snippet children()}
-					<form class="space-y-6">
+					<form class="space-y-6" onsubmit={(e) => { e.preventDefault(); handleChangePassword(); }}>
 						<div class="grid gap-6 sm:grid-cols-2">
 							<PasswordInput
 								label="新密碼"
 								placeholder="輸入新密碼"
+								value={newPassword}
+								oninput={(e) => newPassword = e.currentTarget.value}
 								showStrength
 								autocomplete="new-password"
+								error={passwordErrors.newPassword}
+								disabled={changingPassword}
 							/>
 							<PasswordInput
 								label="確認新密碼"
 								placeholder="再次輸入新密碼"
+								value={confirmPassword}
+								oninput={(e) => confirmPassword = e.currentTarget.value}
 								autocomplete="new-password"
+								error={passwordErrors.confirmPassword}
+								disabled={changingPassword}
 							/>
 						</div>
 
+						<p class="text-sm text-gray-500 dark:text-gray-400">
+							密碼需至少 8 個字元，包含大寫字母、小寫字母和數字
+						</p>
+
 						<div class="flex justify-end">
-							<Button variant="outline">
-								{#snippet children()}變更密碼{/snippet}
+							<Button type="submit" variant="outline" loading={changingPassword}>
+								{#snippet children()}
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+									</svg>
+									變更密碼
+								{/snippet}
 							</Button>
 						</div>
 					</form>
