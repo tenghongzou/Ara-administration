@@ -80,4 +80,13 @@
 		@apply bg-white rounded-lg border border-gray-200;
 		@apply dark:bg-gray-900 dark:border-gray-700;
 	}
+
+	/* Select option 樣式 - 修復深色模式反白問題 */
+	select option {
+		@apply bg-white text-gray-900;
+	}
+
+	.dark select option {
+		@apply bg-gray-900 text-gray-100;
+	}
 }

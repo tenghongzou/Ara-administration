@@ -95,17 +95,15 @@ export const rolesApi = {
 	},
 
 	/**
-	 * 依識別碼取得角色
+	 * 依識別碼 (key) 取得角色
+	 * 注意：後端只支援 UUID 查詢，此方法會先取得角色列表再過濾
 	 */
 	async getRoleByKey(key: string): Promise<Role | null> {
 		try {
-			// apiClient 自動解包 { data: Role } 回應
-			return await apiClient.get<Role>(`/roles/${key}`);
-		} catch (error) {
-			if (error instanceof ApiError && error.isNotFound()) {
-				return null;
-			}
-			throw error;
+			const { data: roles } = await this.getRoles({ pageSize: 100 });
+			return roles.find((role) => role.key === key) ?? null;
+		} catch {
+			return null;
 		}
 	},
 
@@ -166,11 +164,11 @@ export const rolesApi = {
 
 	/**
 	 * 取得角色的權限列表
+	 * @param roleId - 角色 UUID
 	 */
-	async getRolePermissions(roleKey: string): Promise<string[]> {
+	async getRolePermissions(roleId: string): Promise<string[]> {
 		try {
-			// apiClient 自動解包 { data: Role } 回應
-			const role = await apiClient.get<Role>(`/roles/${roleKey}`);
+			const role = await this.getRole(roleId);
 			return role.permissions;
 		} catch {
 			return [];

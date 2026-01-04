@@ -46,7 +46,7 @@
 		transition-colors duration-200
 		focus:outline-none focus:ring-2 focus:ring-offset-0
 		disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed
-		dark:bg-gray-900 dark:text-gray-100
+		dark:bg-gray-900 dark:text-gray-100 dark:disabled:bg-gray-800
 	`;
 
 	let selectStyles = $derived(
