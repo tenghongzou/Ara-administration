@@ -5,9 +5,10 @@
 
 	interface Props {
 		stats: SubscriptionStats;
+		upcomingCount?: number;
 	}
 
-	let { stats }: Props = $props();
+	let { stats, upcomingCount = 0 }: Props = $props();
 
 	const formatted = $derived(subscriptionsService.formatStats(stats));
 </script>
@@ -36,7 +37,7 @@
 				<div>
 					<p class="text-sm text-gray-500 dark:text-gray-400">月費總計</p>
 					<p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-						{formatted.totalMonthly}
+						{formatted.monthlySpending}
 					</p>
 				</div>
 			</div>
@@ -66,7 +67,7 @@
 				<div>
 					<p class="text-sm text-gray-500 dark:text-gray-400">年費總計</p>
 					<p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-						{formatted.totalYearly}
+						{formatted.yearlySpending}
 					</p>
 				</div>
 			</div>
@@ -96,7 +97,7 @@
 				<div>
 					<p class="text-sm text-gray-500 dark:text-gray-400">即將到期 (7天內)</p>
 					<p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-						{formatted.upcomingCount} 筆
+						{upcomingCount} 筆
 					</p>
 				</div>
 			</div>

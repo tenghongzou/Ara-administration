@@ -9,6 +9,7 @@
 	interface Props {
 		subscriptions: Subscription[];
 		stats: SubscriptionStats | null;
+		upcomingCount?: number;
 		loading?: boolean;
 		filters: SubscriptionFilters;
 		selectedRows?: Subscription[];
@@ -29,6 +30,7 @@
 	let {
 		subscriptions,
 		stats,
+		upcomingCount = 0,
 		loading = false,
 		filters = $bindable(),
 		selectedRows = [],
@@ -49,7 +51,7 @@
 
 <div class="space-y-4" data-testid="subscriptions-page">
 	{#if stats}
-		<StatsCards {stats} />
+		<StatsCards {stats} {upcomingCount} />
 	{/if}
 
 	<SubscriptionFiltersPanel bind:filters {onSearch} />

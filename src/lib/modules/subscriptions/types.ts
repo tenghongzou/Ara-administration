@@ -52,11 +52,15 @@ export interface SubscriptionFormErrors {
 
 // ==================== 統計和分析 ====================
 
+/**
+ * 用於 UI 顯示的格式化統計數據
+ * 對應後端 GET /api/v1/subscriptions/stats 回應
+ */
 export interface SubscriptionStatsDisplay {
-	totalMonthly: string;
-	totalYearly: string;
-	upcomingCount: number;
-	activeCount: number;
+	totalSubscriptions: number;
+	activeSubscriptions: number;
+	monthlySpending: string;  // 格式化後的貨幣字串
+	yearlySpending: string;   // 格式化後的貨幣字串
 }
 
 export interface MonthlySpending {

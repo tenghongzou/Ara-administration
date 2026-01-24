@@ -7,6 +7,7 @@
 	interface Props {
 		subscriptions: Subscription[];
 		stats: SubscriptionStats | null;
+		upcomingCount?: number;
 		loading?: boolean;
 		filters: SubscriptionFilters;
 		selectedRows?: Subscription[];
@@ -29,6 +30,7 @@
 	let {
 		subscriptions,
 		stats,
+		upcomingCount = 0,
 		loading = false,
 		filters = $bindable(),
 		selectedRows = [],
@@ -63,6 +65,7 @@
 	<SubscriptionListView
 		{subscriptions}
 		{stats}
+		{upcomingCount}
 		{loading}
 		bind:filters
 		{selectedRows}

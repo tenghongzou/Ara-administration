@@ -41,25 +41,6 @@ interface SubscriptionsResponse {
 	};
 }
 
-/**
- * 後端 /subscriptions/stats 回傳格式
- * 根據 API 文檔：
- * {
- *   "data": {
- *     "totalSubscriptions": 15,
- *     "activeSubscriptions": 12,
- *     "monthlySpending": 2500.00,
- *     "yearlySpending": 30000.00
- *   }
- * }
- */
-interface BackendSubscriptionStatsResponse {
-	totalSubscriptions: number;
-	activeSubscriptions: number;
-	monthlySpending: number;
-	yearlySpending: number;
-}
-
 export interface UpcomingReminder {
 	subscriptionId: string;
 	name: string;
@@ -260,9 +241,9 @@ export const subscriptionsApi = {
 
 	/**
 	 * 取得訂閱統計
-	 * GET /api/v1/subscriptions/stats + GET /api/v1/subscriptions/upcoming
+	 * GET /api/v1/subscriptions/stats
 	 *
-	 * 後端 /stats 返回格式：
+	 * 後端返回格式：
 	 * {
 	 *   "data": {
 	 *     "totalSubscriptions": 15,
@@ -271,36 +252,19 @@ export const subscriptionsApi = {
 	 *     "yearlySpending": 30000.00
 	 *   }
 	 * }
-	 *
-	 * 由於後端 /stats 不包含 upcomingCount，額外呼叫 /upcoming 取得
 	 */
 	async getStatistics(): Promise<SubscriptionStats> {
 		if (config.isMockMode) {
-			const [stats, reminders] = await Promise.all([
-				mockSubscriptionsApi.getStatistics(),
-				mockSubscriptionsApi.getUpcomingReminders(7)
-			]);
+			const stats = await mockSubscriptionsApi.getStatistics();
 			return {
-				totalMonthly: stats.monthlySpending,
-				totalYearly: stats.yearlySpending,
-				upcomingCount: reminders.length,
-				activeCount: stats.activeCount
+				totalSubscriptions: stats.totalCount,
+				activeSubscriptions: stats.activeCount,
+				monthlySpending: stats.monthlySpending,
+				yearlySpending: stats.yearlySpending
 			};
 		}
 
-		// 並行呼叫 /stats 和 /upcoming 以取得完整統計
-		const [statsData, upcomingData] = await Promise.all([
-			apiClient.get<BackendSubscriptionStatsResponse>('/subscriptions/stats'),
-			apiClient.get<Subscription[]>('/subscriptions/upcoming?days=7').catch(() => [] as Subscription[])
-		]);
-
-		// 映射後端欄位到前端預期格式
-		return {
-			totalMonthly: statsData.monthlySpending ?? 0,
-			totalYearly: statsData.yearlySpending ?? 0,
-			upcomingCount: upcomingData.length,
-			activeCount: statsData.activeSubscriptions ?? 0
-		};
+		return apiClient.get<SubscriptionStats>('/subscriptions/stats');
 	},
 
 	/**

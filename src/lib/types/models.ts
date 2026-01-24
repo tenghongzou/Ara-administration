@@ -214,11 +214,25 @@ export interface SubscriptionFilters {
 	billingCycle?: BillingCycle;
 }
 
+/**
+ * 訂閱統計數據
+ * 後端 GET /api/v1/subscriptions/stats 回應格式
+ *
+ * Response:
+ * {
+ *   "data": {
+ *     "totalSubscriptions": 15,
+ *     "activeSubscriptions": 12,
+ *     "monthlySpending": 2500.00,
+ *     "yearlySpending": 30000.00
+ *   }
+ * }
+ */
 export interface SubscriptionStats {
-	totalMonthly: number;
-	totalYearly: number;
-	upcomingCount: number;
-	activeCount: number;
+	totalSubscriptions: number;
+	activeSubscriptions: number;
+	monthlySpending: number;
+	yearlySpending: number;
 }
 
 // 通知設定

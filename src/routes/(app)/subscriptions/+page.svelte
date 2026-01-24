@@ -20,6 +20,7 @@
 
 	let subscriptions = $state<Subscription[]>([]);
 	let stats = $state<SubscriptionStats | null>(null);
+	let upcomingCount = $state(0);
 	let loading = $state(true);
 	let page = $state(1);
 	let pageSize = $state(10);
@@ -45,7 +46,7 @@
 	async function loadSubscriptions() {
 		loading = true;
 		try {
-			const [response, statsResponse] = await Promise.all([
+			const [response, statsResponse, reminders] = await Promise.all([
 				subscriptionsApi.getSubscriptions({
 					page,
 					pageSize,
@@ -56,11 +57,13 @@
 					sortBy: sortColumn,
 					sortDirection
 				}),
-				subscriptionsApi.getStatistics()
+				subscriptionsApi.getStatistics(),
+				subscriptionsApi.getUpcomingReminders(7)
 			]);
 			subscriptions = response.data;
 			total = response.pagination.total;
 			stats = statsResponse;
+			upcomingCount = reminders.length;
 		} catch (error) {
 			toast.error('載入訂閱資料失敗');
 		} finally {
@@ -173,6 +176,7 @@
 	<SubscriptionsContent
 		{subscriptions}
 		{stats}
+		{upcomingCount}
 		{loading}
 		bind:filters
 		selectedRows={selectedSubscriptions}
