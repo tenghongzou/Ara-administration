@@ -19,7 +19,7 @@
 		datasets: [
 			{
 				label: '月度支出',
-				data: monthlyTrend.map((m) => m.spending),
+				data: monthlyTrend.map((m) => m.amount),
 				borderColor: 'rgb(59, 130, 246)',
 				backgroundColor: 'rgba(59, 130, 246, 0.1)',
 				fill: true,

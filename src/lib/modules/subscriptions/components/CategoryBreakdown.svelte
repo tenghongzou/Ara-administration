@@ -21,7 +21,7 @@
 			</div>
 			<div class="text-right">
 				<p class="font-medium text-gray-900 dark:text-gray-100">
-					{subscriptionsService.formatCurrency(category.totalCost)}
+					{subscriptionsService.formatCurrency(category.amount)}
 				</p>
 				<p class="text-sm text-gray-500 dark:text-gray-400">
 					{category.percentage}%

@@ -17,7 +17,7 @@
 		datasets: [
 			{
 				label: '月度支出',
-				data: categoryBreakdown.map((c) => c.totalCost),
+				data: categoryBreakdown.map((c) => c.amount),
 				backgroundColor: categoryBreakdown.map((c) =>
 					subscriptionsService.getCategoryChartColor(c.category as import('$lib/types').ServiceCategory)
 				),

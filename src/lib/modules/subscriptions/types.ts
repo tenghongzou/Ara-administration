@@ -73,24 +73,38 @@ export interface SubscriptionStatsDisplay {
 	activeCount: number;       // 啟用中訂閱數量
 }
 
+/**
+ * 月度消費趨勢
+ * 後端 GET /api/v1/subscriptions/analytics 返回格式
+ */
 export interface MonthlySpending {
 	month: string;
-	spending: number;
+	amount: number;    // 後端返回 amount，不是 spending
 	count: number;
 }
 
+/**
+ * 分類消費統計
+ * 後端 GET /api/v1/subscriptions/analytics 返回格式
+ */
 export interface CategorySpending {
 	category: string;
-	label: string;
+	label?: string;    // 可選，後端可能不返回
 	count: number;
-	totalCost: number;
+	amount: number;    // 後端返回 amount，不是 totalCost
 	percentage: number;
 }
 
+/**
+ * 訂閱分析數據
+ * 後端 GET /api/v1/subscriptions/analytics 返回格式
+ */
 export interface AnalyticsData {
 	monthlyTrend: MonthlySpending[];
 	categoryBreakdown: CategorySpending[];
-	topSubscriptions: {
+	yearlyProjection: number;   // 年度預估
+	averageMonthly: number;     // 平均月度支出
+	topSubscriptions?: {
 		id: string;
 		name: string;
 		cost: number;

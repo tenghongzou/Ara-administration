@@ -60,7 +60,7 @@ export interface UpcomingReminder {
  */
 export interface MonthlySpending {
 	month: string;
-	spending: number;
+	amount: number;    // 後端返回 amount
 	count: number;
 }
 
@@ -70,9 +70,9 @@ export interface MonthlySpending {
  */
 export interface CategorySpending {
 	category: string;
-	label: string;
+	label?: string;    // 可選
 	count: number;
-	totalCost: number;
+	amount: number;    // 後端返回 amount
 	percentage: number;
 }
 
@@ -83,7 +83,9 @@ export interface CategorySpending {
 export interface AnalyticsData {
 	monthlyTrend: MonthlySpending[];
 	categoryBreakdown: CategorySpending[];
-	topSubscriptions: {
+	yearlyProjection: number;
+	averageMonthly: number;
+	topSubscriptions?: {
 		id: string;
 		name: string;
 		cost: number;
@@ -454,6 +456,8 @@ export const subscriptionsApi = {
 		return {
 			monthlyTrend: data.monthlyTrend || [],
 			categoryBreakdown: data.categoryBreakdown || [],
+			yearlyProjection: data.yearlyProjection ?? 0,
+			averageMonthly: data.averageMonthly ?? 0,
 			topSubscriptions: data.topSubscriptions || []
 		};
 	},

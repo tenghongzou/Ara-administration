@@ -16,7 +16,7 @@
 		labels: categoryBreakdown.map((c) => c.label || subscriptionsService.getCategoryLabel(c.category as import('$lib/types').ServiceCategory)),
 		datasets: [
 			{
-				data: categoryBreakdown.map((c) => c.totalCost),
+				data: categoryBreakdown.map((c) => c.amount),
 				backgroundColor: categoryBreakdown.map((c) =>
 					subscriptionsService.getCategoryChartColor(c.category as import('$lib/types').ServiceCategory)
 				),

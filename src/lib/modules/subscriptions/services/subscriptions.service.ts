@@ -132,10 +132,10 @@ class SubscriptionsService {
 	/**
 	 * 計算月度變化百分比
 	 */
-	calculateMonthlyChange(monthlyTrend: { month: string; spending: number }[]): number {
+	calculateMonthlyChange(monthlyTrend: { month: string; amount: number }[]): number {
 		if (monthlyTrend.length < 2) return 0;
-		const current = monthlyTrend[monthlyTrend.length - 1].spending;
-		const previous = monthlyTrend[monthlyTrend.length - 2].spending;
+		const current = monthlyTrend[monthlyTrend.length - 1].amount;
+		const previous = monthlyTrend[monthlyTrend.length - 2].amount;
 		if (previous === 0) return 0;
 		return Math.round(((current - previous) / previous) * 100);
 	}
