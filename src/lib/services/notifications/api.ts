@@ -27,12 +27,17 @@ interface NotificationsResponse {
 	};
 }
 
+/**
+ * 後端未讀數量回應格式
+ * GET /api/v1/notifications/unread-count
+ */
 interface UnreadCountResponse {
 	count: number;
 }
 
 /**
  * 後端通知設定結構
+ * GET /api/v1/notifications/settings
  */
 export interface BackendNotificationSettings {
 	email: {
@@ -58,8 +63,8 @@ export interface BackendNotificationSettings {
 	};
 	quietHours: {
 		enabled: boolean;
-		start: string;
-		end: string;
+		start: string;  // HH:MM 格式
+		end: string;    // HH:MM 格式
 		timezone: string;
 	};
 }
@@ -72,6 +77,28 @@ export const notificationApi = {
 	/**
 	 * 取得通知列表（分頁）
 	 * GET /api/v1/notifications
+	 *
+	 * 查詢參數：
+	 * - page: 頁碼 (預設 1)
+	 * - pageSize: 每頁數量 (預設 20，最大 100)
+	 * - read: 已讀狀態篩選 (true/false)
+	 * - type: 通知類型篩選
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": [
+	 *     {
+	 *       "id": "uuid",
+	 *       "type": "subscription_reminder",
+	 *       "title": "訂閱即將到期",
+	 *       "message": "Netflix 將於 3 天後扣款 NT$390",
+	 *       "read": false,
+	 *       "data": { ... },
+	 *       "createdAt": "2024-01-17T10:30:00+00:00"
+	 *     }
+	 *   ],
+	 *   "pagination": { ... }
+	 * }
 	 */
 	async getNotifications(params: GetNotificationsParams = {}): Promise<PaginatedData<Notification>> {
 		const searchParams = new URLSearchParams();
@@ -115,6 +142,13 @@ export const notificationApi = {
 	/**
 	 * 取得未讀通知數量
 	 * GET /api/v1/notifications/unread-count
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": {
+	 *     "count": 5
+	 *   }
+	 * }
 	 */
 	async getUnreadCount(): Promise<number> {
 		const response = await apiClient.get<UnreadCountResponse>('/notifications/unread-count');
@@ -124,6 +158,22 @@ export const notificationApi = {
 	/**
 	 * 取得通知統計
 	 * GET /api/v1/notifications/statistics
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": {
+	 *     "total": 50,
+	 *     "unread": 5,
+	 *     "byType": {
+	 *       "subscription_reminder": 20,
+	 *       "system": 15,
+	 *       "payment": 10,
+	 *       "other": 5
+	 *     },
+	 *     "thisWeek": 8,
+	 *     "thisMonth": 25
+	 *   }
+	 * }
 	 */
 	async getStatistics(): Promise<NotificationStatistics> {
 		return apiClient.get<NotificationStatistics>('/notifications/statistics');
@@ -132,6 +182,11 @@ export const notificationApi = {
 	/**
 	 * 標記通知為已讀
 	 * POST /api/v1/notifications/{id}/read
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": { ... Notification object with read: true ... }
+	 * }
 	 */
 	async markAsRead(notificationId: string): Promise<Notification> {
 		try {
@@ -147,6 +202,8 @@ export const notificationApi = {
 	/**
 	 * 標記所有通知為已讀
 	 * POST /api/v1/notifications/mark-all-read
+	 *
+	 * 回應：204 No Content
 	 */
 	async markAllAsRead(): Promise<void> {
 		await apiClient.post('/notifications/mark-all-read');
@@ -155,6 +212,8 @@ export const notificationApi = {
 	/**
 	 * 刪除通知
 	 * DELETE /api/v1/notifications/{id}
+	 *
+	 * 回應：204 No Content
 	 */
 	async deleteNotification(notificationId: string): Promise<void> {
 		try {
@@ -170,6 +229,8 @@ export const notificationApi = {
 	/**
 	 * 清除所有通知
 	 * DELETE /api/v1/notifications/clear
+	 *
+	 * 回應：204 No Content
 	 */
 	async clearAllNotifications(): Promise<void> {
 		await apiClient.delete('/notifications/clear');
@@ -178,6 +239,27 @@ export const notificationApi = {
 	/**
 	 * 取得通知設定
 	 * GET /api/v1/notifications/settings
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": {
+	 *     "email": {
+	 *       "enabled": true,
+	 *       "subscriptionReminders": true,
+	 *       "paymentAlerts": true,
+	 *       "systemUpdates": false,
+	 *       "marketing": false
+	 *     },
+	 *     "push": { ... },
+	 *     "inApp": { ... },
+	 *     "quietHours": {
+	 *       "enabled": false,
+	 *       "start": "22:00",
+	 *       "end": "08:00",
+	 *       "timezone": "Asia/Taipei"
+	 *     }
+	 *   }
+	 * }
 	 */
 	async getSettings(): Promise<NotificationSettings> {
 		const backendSettings = await apiClient.get<BackendNotificationSettings>('/notifications/settings');
@@ -222,6 +304,23 @@ export const notificationApi = {
 	/**
 	 * 更新通知設定
 	 * PUT/PATCH /api/v1/notifications/settings
+	 *
+	 * 請求格式（部分更新）：
+	 * {
+	 *   "email": {
+	 *     "enabled": true,
+	 *     "subscriptionReminders": true,
+	 *     "paymentAlerts": true,
+	 *     "systemUpdates": false,
+	 *     "marketing": false
+	 *   },
+	 *   "quietHours": {
+	 *     "enabled": true,
+	 *     "start": "23:00",
+	 *     "end": "07:00",
+	 *     "timezone": "Asia/Taipei"
+	 *   }
+	 * }
 	 */
 	async updateSettings(settings: Partial<NotificationSettings>): Promise<NotificationSettings> {
 		// 將前端設定轉換為後端格式

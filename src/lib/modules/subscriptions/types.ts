@@ -94,7 +94,7 @@ export interface CalendarDayData {
 		cost: number;
 		currency: string;
 	}[];
-	totalAmount: number;
+	totalAmount?: number;
 }
 
 export interface CalendarStats {

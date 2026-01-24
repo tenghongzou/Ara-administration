@@ -36,6 +36,7 @@ interface LogsResponse {
 
 /**
  * 後端統計資料響應結構
+ * GET /api/v1/audit-logs/statistics
  */
 interface AuditLogStatisticsResponse {
 	total: number;
@@ -53,6 +54,41 @@ export const logsApi = {
 	/**
 	 * 取得審計日誌列表（分頁）
 	 * GET /api/v1/audit-logs
+	 *
+	 * 查詢參數：
+	 * - page: 頁碼 (預設 1)
+	 * - pageSize: 每頁數量 (預設 20，最大 100)
+	 * - action: 操作類型篩選 (login, logout, create, update, delete, view, export, import)
+	 * - resource: 資源類型篩選 (auth, user, role, permission, subscription, notification, audit_log)
+	 * - status: 狀態篩選 (success, failure)
+	 * - userId: 使用者 ID 篩選
+	 * - startDate: 開始日期 (ISO 8601 格式)
+	 * - endDate: 結束日期 (ISO 8601 格式)
+	 * - search: 搜尋關鍵字 (比對描述)
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": [
+	 *     {
+	 *       "id": "uuid",
+	 *       "action": "login",
+	 *       "resource": "auth",
+	 *       "resourceId": "uuid",
+	 *       "description": "User logged in: admin",
+	 *       "status": "success",
+	 *       "ipAddress": "192.168.1.100",
+	 *       "userAgent": "Mozilla/5.0...",
+	 *       "user": {
+	 *         "id": "uuid",
+	 *         "name": "Administrator",
+	 *         "email": "admin@example.com"
+	 *       },
+	 *       "metadata": { ... },
+	 *       "createdAt": "2024-01-15T10:30:00+00:00"
+	 *     }
+	 *   ],
+	 *   "pagination": { ... }
+	 * }
 	 */
 	async getLogs(params: GetLogsParams = {}): Promise<PaginatedData<AuditLog>> {
 		if (config.isMockMode) {
@@ -90,6 +126,33 @@ export const logsApi = {
 	/**
 	 * 取得單一審計日誌
 	 * GET /api/v1/audit-logs/{id}
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": {
+	 *     "id": "uuid",
+	 *     "action": "update",
+	 *     "resource": "subscription",
+	 *     "resourceId": "uuid",
+	 *     "description": "Updated subscription: Netflix",
+	 *     "status": "success",
+	 *     "ipAddress": "192.168.1.100",
+	 *     "userAgent": "Mozilla/5.0...",
+	 *     "user": {
+	 *       "id": "uuid",
+	 *       "name": "Administrator",
+	 *       "email": "admin@example.com",
+	 *       "avatar": "https://example.com/avatar.jpg"
+	 *     },
+	 *     "metadata": {
+	 *       "changes": {
+	 *         "cost": { "old": 390, "new": 450 },
+	 *         "status": { "old": "active", "new": "paused" }
+	 *       }
+	 *     },
+	 *     "createdAt": "2024-01-15T10:30:00+00:00"
+	 *   }
+	 * }
 	 */
 	async getLog(id: string): Promise<AuditLog> {
 		if (config.isMockMode) {
@@ -109,6 +172,9 @@ export const logsApi = {
 	/**
 	 * 取得最近的審計日誌
 	 * GET /api/v1/audit-logs/recent
+	 *
+	 * 查詢參數：
+	 * - limit: 回傳數量 (預設 20，最大 50)
 	 */
 	async getRecentLogs(limit: number = 20): Promise<AuditLog[]> {
 		if (config.isMockMode) {
@@ -121,6 +187,39 @@ export const logsApi = {
 	/**
 	 * 取得審計日誌統計
 	 * GET /api/v1/audit-logs/statistics
+	 *
+	 * 查詢參數：
+	 * - days: 統計天數範圍 (預設 30)
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": {
+	 *     "total": 500,
+	 *     "byAction": {
+	 *       "login": 150,
+	 *       "logout": 120,
+	 *       "create": 80,
+	 *       "update": 100,
+	 *       "delete": 30,
+	 *       "view": 20
+	 *     },
+	 *     "byResource": {
+	 *       "auth": 270,
+	 *       "user": 50,
+	 *       "subscription": 120,
+	 *       "role": 30,
+	 *       "notification": 30
+	 *     },
+	 *     "byStatus": {
+	 *       "success": 480,
+	 *       "failure": 20
+	 *     },
+	 *     "byDay": [
+	 *       { "date": "2024-01-15", "count": 75 },
+	 *       { "date": "2024-01-14", "count": 68 }
+	 *     ]
+	 *   }
+	 * }
 	 */
 	async getStatistics(days: number = 30): Promise<AuditLogStatistics> {
 		if (config.isMockMode) {
@@ -142,6 +241,15 @@ export const logsApi = {
 	/**
 	 * 取得篩選選項（可用的 action、resource、status）
 	 * GET /api/v1/audit-logs/filters
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": {
+	 *     "actions": ["login", "logout", "create", "update", "delete", "view", "export", "import"],
+	 *     "resources": ["auth", "user", "role", "permission", "subscription", "notification", "audit_log"],
+	 *     "statuses": ["success", "failure"]
+	 *   }
+	 * }
 	 */
 	async getFilters(): Promise<AuditLogFilters> {
 		if (config.isMockMode) {
@@ -159,6 +267,9 @@ export const logsApi = {
 	/**
 	 * 取得指定資源的審計日誌
 	 * GET /api/v1/audit-logs/resource/{resource}/{resourceId}
+	 *
+	 * 查詢參數：
+	 * - limit: 回傳數量 (預設 50，最大 100)
 	 */
 	async getLogsByResource(resource: string, resourceId: string, limit: number = 50): Promise<AuditLog[]> {
 		if (config.isMockMode) {
@@ -174,6 +285,9 @@ export const logsApi = {
 	/**
 	 * 取得當前使用者的活動日誌
 	 * GET /api/v1/audit-logs/my-activity
+	 *
+	 * 查詢參數：
+	 * - limit: 回傳數量 (預設 20，最大 50)
 	 */
 	async getMyActivity(limit: number = 20): Promise<AuditLog[]> {
 		if (config.isMockMode) {

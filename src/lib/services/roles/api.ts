@@ -30,6 +30,7 @@ interface RolesResponse {
 
 /**
  * 權限群組結構
+ * 對應後端 GET /api/v1/permissions 和 GET /api/v1/permissions/grouped 回應
  */
 export interface PermissionGroup {
 	key: string;
@@ -39,6 +40,7 @@ export interface PermissionGroup {
 
 /**
  * 單一權限結構
+ * 對應後端 GET /api/v1/permissions/flat 回應中的每個項目
  */
 export interface Permission {
 	id: string;
@@ -66,6 +68,23 @@ export const rolesApi = {
 	/**
 	 * 取得角色列表
 	 * GET /api/v1/roles
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": [
+	 *     {
+	 *       "id": "uuid",
+	 *       "key": "admin",
+	 *       "label": "Administrator",
+	 *       "description": "Full system access",
+	 *       "color": "red",
+	 *       "permissions": ["users:read", "users:create", ...],
+	 *       "createdAt": "2023-01-01T00:00:00+00:00",
+	 *       "updatedAt": "2024-01-01T00:00:00+00:00"
+	 *     }
+	 *   ]
+	 * }
+	 *
 	 * 注意：後端目前返回 { data: [...] } 格式，apiClient 會自動解包成數組
 	 */
 	async getRoles(params: GetRolesParams = {}): Promise<PaginatedData<Role>> {
@@ -104,6 +123,20 @@ export const rolesApi = {
 	/**
 	 * 取得單一角色
 	 * GET /api/v1/roles/{id}
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": {
+	 *     "id": "uuid",
+	 *     "key": "admin",
+	 *     "label": "Administrator",
+	 *     "description": "Full system access",
+	 *     "color": "red",
+	 *     "permissions": ["users:read", "users:create", ...],
+	 *     "createdAt": "2023-01-01T00:00:00+00:00",
+	 *     "updatedAt": "2024-01-01T00:00:00+00:00"
+	 *   }
+	 * }
 	 */
 	async getRole(id: string): Promise<Role> {
 		try {
@@ -132,6 +165,20 @@ export const rolesApi = {
 	/**
 	 * 建立角色
 	 * POST /api/v1/roles
+	 *
+	 * 請求格式：
+	 * {
+	 *   "key": "editor",
+	 *   "label": "Editor",
+	 *   "description": "Can edit content",
+	 *   "color": "green",
+	 *   "permissions": ["users:read", "subscriptions:read", "subscriptions:update"]
+	 * }
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": { ... Role object ... }
+	 * }
 	 */
 	async createRole(data: CreateRoleData): Promise<Role> {
 		try {
@@ -147,6 +194,19 @@ export const rolesApi = {
 	/**
 	 * 更新角色
 	 * PUT/PATCH /api/v1/roles/{id}
+	 *
+	 * 請求格式（部分更新）：
+	 * {
+	 *   "label": "Content Editor",
+	 *   "permissions": ["users:read", "subscriptions:read", ...]
+	 * }
+	 *
+	 * 注意：key 欄位不可更新
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": { ... Role object ... }
+	 * }
 	 */
 	async updateRole(id: string, data: UpdateRoleData): Promise<Role> {
 		try {
@@ -165,6 +225,8 @@ export const rolesApi = {
 	/**
 	 * 刪除角色
 	 * DELETE /api/v1/roles/{id}
+	 *
+	 * 回應：204 No Content
 	 */
 	async deleteRole(id: string): Promise<void> {
 		try {
@@ -201,6 +263,28 @@ export const rolesApi = {
 	/**
 	 * 獲取所有權限（按分組）
 	 * GET /api/v1/permissions
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": [
+	 *     {
+	 *       "key": "users",
+	 *       "label": "Users",
+	 *       "permissions": [
+	 *         {
+	 *           "id": "uuid",
+	 *           "key": "users:read",
+	 *           "label": "View Users",
+	 *           "groupKey": "users",
+	 *           "groupLabel": "Users"
+	 *         },
+	 *         ...
+	 *       ]
+	 *     },
+	 *     ...
+	 *   ]
+	 * }
+	 *
 	 * 等同於 GET /api/v1/permissions/grouped
 	 */
 	async getPermissions(): Promise<PermissionGroup[]> {
@@ -218,6 +302,20 @@ export const rolesApi = {
 	/**
 	 * 獲取所有權限（扁平列表）
 	 * GET /api/v1/permissions/flat
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": [
+	 *     {
+	 *       "id": "uuid",
+	 *       "key": "users:read",
+	 *       "label": "View Users",
+	 *       "groupKey": "users",
+	 *       "groupLabel": "Users"
+	 *     },
+	 *     ...
+	 *   ]
+	 * }
 	 */
 	async getPermissionsFlat(): Promise<Permission[]> {
 		return apiClient.get<Permission[]>('/permissions/flat');

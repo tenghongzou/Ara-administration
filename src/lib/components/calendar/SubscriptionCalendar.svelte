@@ -90,7 +90,7 @@
 		if (day.date && day.data) {
 			// Convert CalendarDayData subscriptions to Subscription[] for the callback
 			const subscriptions = day.data.subscriptions as unknown as Subscription[];
-			onDayClick?.(day.dateStr, subscriptions, day.data.totalAmount);
+			onDayClick?.(day.dateStr, subscriptions, day.data.totalAmount ?? 0);
 		}
 	}
 
@@ -172,11 +172,11 @@
 						<div
 							class={cn(
 								'mt-1 px-1.5 py-1 rounded text-xs',
-								getAmountIntensity(day.data.totalAmount)
+								getAmountIntensity(day.data.totalAmount ?? 0)
 							)}
 						>
 							<div class="font-medium text-gray-800 dark:text-gray-200">
-								${formatAmount(day.data.totalAmount)}
+								${formatAmount(day.data.totalAmount ?? 0)}
 							</div>
 							<div class="text-gray-600 dark:text-gray-400">
 								{day.data.subscriptions.length} 筆

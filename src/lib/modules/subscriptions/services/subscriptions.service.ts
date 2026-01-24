@@ -114,7 +114,7 @@ class SubscriptionsService {
 	 */
 	calculateCalendarStats(calendarData: CalendarDayData[]): CalendarStats {
 		return {
-			monthlyTotal: calendarData.reduce((sum, day) => sum + day.totalAmount, 0),
+			monthlyTotal: calendarData.reduce((sum, day) => sum + (day.totalAmount ?? 0), 0),
 			monthlyCount: calendarData.reduce((sum, day) => sum + day.subscriptions.length, 0),
 			daysWithPayments: calendarData.length
 		};
