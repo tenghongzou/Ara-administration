@@ -23,7 +23,11 @@ export const categoryOptions: CategoryOption[] = [
 	{ value: 'error', label: '錯誤', icon: '✕' },
 	{ value: 'security', label: '安全', icon: '🔒' },
 	{ value: 'system', label: '系統', icon: '⚙️' },
-	{ value: 'subscription', label: '訂閱', icon: '📅' }
+	{ value: 'subscription', label: '訂閱', icon: '📅' },
+	{ value: 'subscription_reminder', label: '訂閱提醒', icon: '🔔' },
+	{ value: 'payment', label: '付款', icon: '💳' },
+	{ value: 'marketing', label: '行銷', icon: '📢' },
+	{ value: 'other', label: '其他', icon: '📌' }
 ];
 
 /**
@@ -86,7 +90,11 @@ class NotificationsService {
 			error: [],
 			security: [],
 			system: [],
-			subscription: []
+			subscription: [],
+			subscription_reminder: [],
+			payment: [],
+			marketing: [],
+			other: []
 		};
 
 		items.forEach((item) => {
@@ -111,7 +119,11 @@ class NotificationsService {
 			error: 0,
 			security: 0,
 			system: 0,
-			subscription: 0
+			subscription: 0,
+			subscription_reminder: 0,
+			payment: 0,
+			marketing: 0,
+			other: 0
 		};
 
 		items.forEach((item) => {
@@ -231,6 +243,34 @@ class NotificationsService {
 					text: 'text-indigo-600 dark:text-indigo-400',
 					border: 'border-indigo-200 dark:border-indigo-800'
 				};
+			case 'subscription_reminder':
+				return {
+					icon: '🔔',
+					bg: 'bg-amber-100 dark:bg-amber-900/30',
+					text: 'text-amber-600 dark:text-amber-400',
+					border: 'border-amber-200 dark:border-amber-800'
+				};
+			case 'payment':
+				return {
+					icon: '💳',
+					bg: 'bg-emerald-100 dark:bg-emerald-900/30',
+					text: 'text-emerald-600 dark:text-emerald-400',
+					border: 'border-emerald-200 dark:border-emerald-800'
+				};
+			case 'marketing':
+				return {
+					icon: '📢',
+					bg: 'bg-pink-100 dark:bg-pink-900/30',
+					text: 'text-pink-600 dark:text-pink-400',
+					border: 'border-pink-200 dark:border-pink-800'
+				};
+			case 'other':
+				return {
+					icon: '📌',
+					bg: 'bg-slate-100 dark:bg-slate-900/30',
+					text: 'text-slate-600 dark:text-slate-400',
+					border: 'border-slate-200 dark:border-slate-800'
+				};
 			case 'info':
 			default:
 				return {
@@ -259,6 +299,14 @@ class NotificationsService {
 				return { variant: 'default', label: '系統' };
 			case 'subscription':
 				return { variant: 'info', label: '訂閱' };
+			case 'subscription_reminder':
+				return { variant: 'warning', label: '訂閱提醒' };
+			case 'payment':
+				return { variant: 'success', label: '付款' };
+			case 'marketing':
+				return { variant: 'info', label: '行銷' };
+			case 'other':
+				return { variant: 'default', label: '其他' };
 			case 'info':
 			default:
 				return { variant: 'info', label: '資訊' };

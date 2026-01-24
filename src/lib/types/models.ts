@@ -62,7 +62,7 @@ export interface Role {
 	description: string;
 	color: string; // Tailwind CSS 顏色類別
 	permissions: string[]; // 權限列表
-	isSystem: boolean; // 是否為系統內建角色（不可刪除）
+	isSystem?: boolean; // 是否為系統內建角色（不可刪除）
 	userCount?: number; // 使用此角色的用戶數
 	createdAt: string;
 	updatedAt: string;
@@ -71,9 +71,9 @@ export interface Role {
 export interface CreateRoleData {
 	key: string;
 	label: string;
-	description: string;
+	description?: string;
 	color?: string;
-	permissions: string[];
+	permissions?: string[];
 }
 
 export interface UpdateRoleData {
@@ -120,9 +120,22 @@ export interface RegisterData {
 }
 
 // 訂閱管理相關
-export type BillingCycle = 'weekly' | 'monthly' | 'quarterly' | 'semi-annual' | 'annual';
-export type SubscriptionStatus = 'active' | 'paused' | 'cancelled' | 'expired';
-export type ServiceCategory = 'streaming' | 'music' | 'cloud' | 'productivity' | 'gaming' | 'other';
+// 後端支援的計費週期
+export type BillingCycle = 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'lifetime' | 'custom';
+// 後端支援的訂閱狀態
+export type SubscriptionStatus = 'active' | 'paused' | 'cancelled' | 'trial' | 'expired';
+// 後端支援的服務分類
+export type ServiceCategory =
+	| 'streaming'
+	| 'software'
+	| 'gaming'
+	| 'music'
+	| 'news'
+	| 'cloud'
+	| 'productivity'
+	| 'education'
+	| 'fitness'
+	| 'other';
 export type PaymentMethod = 'credit_card' | 'debit_card' | 'bank_transfer' | 'paypal' | 'other';
 
 export interface Subscription {
@@ -138,7 +151,7 @@ export interface Subscription {
 	description?: string;
 	website?: string;
 	accountEmail?: string;
-	paymentMethod?: PaymentMethod;
+	paymentMethod?: string; // 後端使用 string，非限定型別
 	autoRenew: boolean;
 	reminderDays?: number;
 	startDate: string;
@@ -146,32 +159,34 @@ export interface Subscription {
 	updatedAt: string;
 }
 
+// 付款記錄 - 新增 refunded 狀態以匹配後端
 export interface PaymentHistory {
 	id: string;
 	subscriptionId: string;
 	amount: number;
 	currency: string;
 	paidAt: string;
-	status: 'paid' | 'failed' | 'pending';
+	status: 'paid' | 'pending' | 'failed' | 'refunded';
 	note?: string;
 	createdAt: string;
 }
 
 export interface CreateSubscriptionData {
 	name: string;
-	category: ServiceCategory;
 	cost: number;
 	currency?: string;
-	billingCycle: BillingCycle;
-	nextBillingDate: string;
+	category?: ServiceCategory;
+	billingCycle?: BillingCycle;
+	nextBillingDate?: string;
 	status?: SubscriptionStatus;
 	description?: string;
 	website?: string;
 	accountEmail?: string;
-	paymentMethod?: PaymentMethod;
+	paymentMethod?: string;
 	autoRenew?: boolean;
 	reminderDays?: number;
 	startDate?: string;
+	logo?: string;
 }
 
 export interface UpdateSubscriptionData {
@@ -183,12 +198,13 @@ export interface UpdateSubscriptionData {
 	billingCycle?: BillingCycle;
 	nextBillingDate?: string;
 	status?: SubscriptionStatus;
-	description?: string;
-	website?: string;
-	accountEmail?: string;
-	paymentMethod?: PaymentMethod;
+	description?: string | null;
+	website?: string | null;
+	accountEmail?: string | null;
+	paymentMethod?: string | null;
 	autoRenew?: boolean;
-	reminderDays?: number;
+	reminderDays?: number | null;
+	startDate?: string;
 }
 
 export interface SubscriptionFilters {
@@ -249,23 +265,25 @@ export interface QuietHoursSettings {
 	allowUrgent: boolean;
 }
 
-// 通知項目
+// 通知項目 - 更新以匹配後端結構
 export interface Notification {
 	id: string;
-	userId: string;
+	userId?: string;
 	type: NotificationType;
-	eventType: string;
+	eventType?: string;
 	title: string;
 	message: string;
-	payload?: Record<string, unknown> | null;
+	data?: Record<string, unknown> | null; // 後端使用 data 而非 payload
+	payload?: Record<string, unknown> | null; // 保持向後兼容
 	link?: string | null;
 	read: boolean;
-	priority: NotificationPriority;
+	priority?: NotificationPriority;
 	source?: string | null;
 	createdAt: string;
 	readAt?: string | null;
 }
 
+// 後端支援的通知類型
 export type NotificationType =
 	| 'info'
 	| 'success'
@@ -273,18 +291,24 @@ export type NotificationType =
 	| 'error'
 	| 'security'
 	| 'system'
-	| 'subscription';
+	| 'subscription'
+	| 'subscription_reminder'
+	| 'payment'
+	| 'marketing'
+	| 'other';
 
 export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
 
-// 通知統計
+// 通知統計 - 更新以匹配後端結構
 export interface NotificationStatistics {
 	total: number;
 	unread: number;
-	byType: Record<NotificationType, number>;
+	byType: Record<string, number>;
+	thisWeek?: number;
+	thisMonth?: number;
 }
 
-// 審計日誌
+// 審計日誌 - 更新以匹配後端結構
 export interface AuditLog {
 	id: string;
 	userId?: string | null;
@@ -302,6 +326,13 @@ export interface AuditLog {
 	status: 'success' | 'failure';
 	errorMessage?: string | null;
 	createdAt: string;
+	// 後端在 /audit-logs 列表中包含 user 物件
+	user?: {
+		id: string;
+		name: string;
+		email: string;
+		avatar?: string;
+	} | null;
 }
 
 export type AuditLogAction =
@@ -314,12 +345,13 @@ export type AuditLogAction =
 	| 'export'
 	| 'import';
 
-// 審計日誌統計
+// 審計日誌統計 - 更新以匹配後端結構
 export interface AuditLogStatistics {
 	total: number;
 	byAction: Record<string, number>;
 	byResource: Record<string, number>;
 	byStatus: Record<string, number>;
+	byDay?: { date: string; count: number }[];
 }
 
 // 審計日誌篩選選項

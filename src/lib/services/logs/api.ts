@@ -34,6 +34,17 @@ interface LogsResponse {
 	};
 }
 
+/**
+ * 後端統計資料響應結構
+ */
+interface AuditLogStatisticsResponse {
+	total: number;
+	byAction: Record<string, number>;
+	byResource: Record<string, number>;
+	byStatus: Record<string, number>;
+	byDay?: { date: string; count: number }[];
+}
+
 // ============================================================================
 // Logs API
 // ============================================================================
@@ -41,6 +52,7 @@ interface LogsResponse {
 export const logsApi = {
 	/**
 	 * 取得審計日誌列表（分頁）
+	 * GET /api/v1/audit-logs
 	 */
 	async getLogs(params: GetLogsParams = {}): Promise<PaginatedData<AuditLog>> {
 		if (config.isMockMode) {
@@ -77,6 +89,7 @@ export const logsApi = {
 
 	/**
 	 * 取得單一審計日誌
+	 * GET /api/v1/audit-logs/{id}
 	 */
 	async getLog(id: string): Promise<AuditLog> {
 		if (config.isMockMode) {
@@ -95,6 +108,7 @@ export const logsApi = {
 
 	/**
 	 * 取得最近的審計日誌
+	 * GET /api/v1/audit-logs/recent
 	 */
 	async getRecentLogs(limit: number = 20): Promise<AuditLog[]> {
 		if (config.isMockMode) {
@@ -106,17 +120,28 @@ export const logsApi = {
 
 	/**
 	 * 取得審計日誌統計
+	 * GET /api/v1/audit-logs/statistics
 	 */
 	async getStatistics(days: number = 30): Promise<AuditLogStatistics> {
 		if (config.isMockMode) {
 			return mockLogsApi.getStatistics();
 		}
 
-		return apiClient.get<AuditLogStatistics>(`/audit-logs/statistics?days=${days}`);
+		const response = await apiClient.get<AuditLogStatisticsResponse>(
+			`/audit-logs/statistics?days=${days}`
+		);
+
+		return {
+			total: response.total,
+			byAction: response.byAction,
+			byResource: response.byResource,
+			byStatus: response.byStatus
+		};
 	},
 
 	/**
 	 * 取得篩選選項（可用的 action、resource、status）
+	 * GET /api/v1/audit-logs/filters
 	 */
 	async getFilters(): Promise<AuditLogFilters> {
 		if (config.isMockMode) {
@@ -133,6 +158,7 @@ export const logsApi = {
 
 	/**
 	 * 取得指定資源的審計日誌
+	 * GET /api/v1/audit-logs/resource/{resource}/{resourceId}
 	 */
 	async getLogsByResource(resource: string, resourceId: string, limit: number = 50): Promise<AuditLog[]> {
 		if (config.isMockMode) {
@@ -147,6 +173,7 @@ export const logsApi = {
 
 	/**
 	 * 取得當前使用者的活動日誌
+	 * GET /api/v1/audit-logs/my-activity
 	 */
 	async getMyActivity(limit: number = 20): Promise<AuditLog[]> {
 		if (config.isMockMode) {

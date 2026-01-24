@@ -11,12 +11,22 @@
 	let { analytics }: Props = $props();
 
 	let monthlyChange = $derived(subscriptionsService.calculateMonthlyChange(analytics.monthlyTrend));
+
+	// 計算平均月度支出
+	let averageMonthly = $derived(() => {
+		if (analytics.monthlyTrend.length === 0) return 0;
+		const total = analytics.monthlyTrend.reduce((sum, m) => sum + m.spending, 0);
+		return total / analytics.monthlyTrend.length;
+	});
+
+	// 計算年度預估
+	let yearlyProjection = $derived(() => averageMonthly() * 12);
 </script>
 
 <div class="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
 	<StatCard
 		title="月度支出"
-		value={subscriptionsService.formatCurrency(analytics.averageMonthly)}
+		value={subscriptionsService.formatCurrency(averageMonthly())}
 		variant="primary"
 	>
 		{#snippet icon()}
@@ -26,7 +36,7 @@
 
 	<StatCard
 		title="年度預估"
-		value={subscriptionsService.formatCurrency(analytics.yearlyProjection)}
+		value={subscriptionsService.formatCurrency(yearlyProjection())}
 		variant="success"
 	>
 		{#snippet icon()}

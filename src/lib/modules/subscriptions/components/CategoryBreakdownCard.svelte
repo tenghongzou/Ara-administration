@@ -13,13 +13,13 @@
 	let { categoryBreakdown }: Props = $props();
 
 	let barChartData = $derived<ChartData<'bar'>>({
-		labels: categoryBreakdown.map((c) => subscriptionsService.getCategoryLabel(c.category)),
+		labels: categoryBreakdown.map((c) => c.label || subscriptionsService.getCategoryLabel(c.category as import('$lib/types').ServiceCategory)),
 		datasets: [
 			{
 				label: '月度支出',
-				data: categoryBreakdown.map((c) => c.amount),
+				data: categoryBreakdown.map((c) => c.totalCost),
 				backgroundColor: categoryBreakdown.map((c) =>
-					subscriptionsService.getCategoryChartColor(c.category)
+					subscriptionsService.getCategoryChartColor(c.category as import('$lib/types').ServiceCategory)
 				),
 				borderRadius: 4
 			}

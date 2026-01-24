@@ -61,28 +61,39 @@ export interface SubscriptionStatsDisplay {
 
 export interface MonthlySpending {
 	month: string;
-	amount: number;
+	spending: number;
 	count: number;
 }
 
 export interface CategorySpending {
-	category: ServiceCategory;
-	amount: number;
+	category: string;
+	label: string;
+	count: number;
+	totalCost: number;
 	percentage: number;
 }
 
 export interface AnalyticsData {
 	monthlyTrend: MonthlySpending[];
 	categoryBreakdown: CategorySpending[];
-	yearlyProjection: number;
-	averageMonthly: number;
+	topSubscriptions: {
+		id: string;
+		name: string;
+		cost: number;
+		currency: string;
+	}[];
 }
 
 // ==================== 日曆相關 ====================
 
 export interface CalendarDayData {
 	date: string;
-	subscriptions: Subscription[];
+	subscriptions: {
+		id: string;
+		name: string;
+		cost: number;
+		currency: string;
+	}[];
 	totalAmount: number;
 }
 
@@ -127,10 +138,14 @@ export interface SelectOption<T = string> {
 export const categoryOptions: SelectOption<ServiceCategory | ''>[] = [
 	{ value: '', label: '全部分類' },
 	{ value: 'streaming', label: '影音串流' },
+	{ value: 'software', label: '軟體' },
+	{ value: 'gaming', label: '遊戲' },
 	{ value: 'music', label: '音樂' },
+	{ value: 'news', label: '新聞' },
 	{ value: 'cloud', label: '雲端儲存' },
 	{ value: 'productivity', label: '生產力工具' },
-	{ value: 'gaming', label: '遊戲' },
+	{ value: 'education', label: '教育' },
+	{ value: 'fitness', label: '健身' },
 	{ value: 'other', label: '其他' }
 ];
 
@@ -139,6 +154,7 @@ export const statusOptions: SelectOption<SubscriptionStatus | ''>[] = [
 	{ value: 'active', label: '啟用中' },
 	{ value: 'paused', label: '已暫停' },
 	{ value: 'cancelled', label: '已取消' },
+	{ value: 'trial', label: '試用中' },
 	{ value: 'expired', label: '已過期' }
 ];
 
@@ -147,8 +163,9 @@ export const billingCycleOptions: SelectOption<BillingCycle | ''>[] = [
 	{ value: 'weekly', label: '週繳' },
 	{ value: 'monthly', label: '月繳' },
 	{ value: 'quarterly', label: '季繳' },
-	{ value: 'semi-annual', label: '半年繳' },
-	{ value: 'annual', label: '年繳' }
+	{ value: 'yearly', label: '年繳' },
+	{ value: 'lifetime', label: '終身' },
+	{ value: 'custom', label: '自訂' }
 ];
 
 export const currencyOptions: SelectOption[] = [

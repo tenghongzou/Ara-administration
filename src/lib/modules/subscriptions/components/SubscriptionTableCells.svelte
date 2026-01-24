@@ -33,7 +33,7 @@
 		return subscriptionStatusLabels[subscription.status];
 	}
 
-	export function getStatusColor(subscription: Subscription): 'success' | 'default' | 'warning' | 'error' {
+	export function getStatusColor(subscription: Subscription): 'success' | 'default' | 'warning' | 'error' | 'info' {
 		return subscriptionStatusColors[subscription.status];
 	}
 

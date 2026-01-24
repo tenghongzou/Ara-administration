@@ -3,7 +3,7 @@
  * 提供訂閱管理的業務邏輯
  */
 
-import type { Subscription, BillingCycle, SubscriptionStats, ServiceCategory } from '$lib/types';
+import type { Subscription, BillingCycle, SubscriptionStats, ServiceCategory, PaymentMethod } from '$lib/types';
 import type {
 	SubscriptionFilters,
 	SubscriptionFormData,
@@ -77,10 +77,14 @@ class SubscriptionsService {
 				return cost;
 			case 'quarterly':
 				return cost / 3;
-			case 'semi-annual':
-				return cost / 6;
-			case 'annual':
+			case 'yearly':
 				return cost / 12;
+			case 'lifetime':
+				return 0; // Lifetime has no recurring cost
+			case 'custom':
+				return cost; // Assume monthly for custom
+			default:
+				return cost;
 		}
 	}
 
@@ -119,10 +123,10 @@ class SubscriptionsService {
 	/**
 	 * 計算月度變化百分比
 	 */
-	calculateMonthlyChange(monthlyTrend: { month: string; amount: number }[]): number {
+	calculateMonthlyChange(monthlyTrend: { month: string; spending: number }[]): number {
 		if (monthlyTrend.length < 2) return 0;
-		const current = monthlyTrend[monthlyTrend.length - 1].amount;
-		const previous = monthlyTrend[monthlyTrend.length - 2].amount;
+		const current = monthlyTrend[monthlyTrend.length - 1].spending;
+		const previous = monthlyTrend[monthlyTrend.length - 2].spending;
 		if (previous === 0) return 0;
 		return Math.round(((current - previous) / previous) * 100);
 	}
@@ -254,7 +258,7 @@ class SubscriptionsService {
 			description: subscription.description || '',
 			website: subscription.website || '',
 			accountEmail: subscription.accountEmail || '',
-			paymentMethod: subscription.paymentMethod || '',
+			paymentMethod: (subscription.paymentMethod as PaymentMethod) || '',
 			autoRenew: subscription.autoRenew,
 			reminderDays: subscription.reminderDays || ''
 		};
@@ -321,13 +325,17 @@ class SubscriptionsService {
 	getCategoryLabel(category: ServiceCategory): string {
 		const labels: Record<ServiceCategory, string> = {
 			streaming: '影音串流',
+			software: '軟體',
+			gaming: '遊戲',
 			music: '音樂',
+			news: '新聞',
 			cloud: '雲端儲存',
 			productivity: '生產力工具',
-			gaming: '遊戲',
+			education: '教育',
+			fitness: '健身',
 			other: '其他'
 		};
-		return labels[category];
+		return labels[category] || category;
 	}
 
 	getBillingCycleLabel(cycle: BillingCycle): string {
@@ -335,10 +343,11 @@ class SubscriptionsService {
 			weekly: '週繳',
 			monthly: '月繳',
 			quarterly: '季繳',
-			'semi-annual': '半年繳',
-			annual: '年繳'
+			yearly: '年繳',
+			lifetime: '終身',
+			custom: '自訂'
 		};
-		return labels[cycle];
+		return labels[cycle] || cycle;
 	}
 
 	getStatusLabel(status: string): string {
@@ -346,6 +355,7 @@ class SubscriptionsService {
 			active: '啟用中',
 			paused: '已暫停',
 			cancelled: '已取消',
+			trial: '試用中',
 			expired: '已過期'
 		};
 		return labels[status] || status;
@@ -354,25 +364,33 @@ class SubscriptionsService {
 	getCategoryColorClass(category: ServiceCategory): string {
 		const colors: Record<ServiceCategory, string> = {
 			streaming: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+			software: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+			gaming: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
 			music: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+			news: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
 			cloud: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
 			productivity: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-			gaming: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+			education: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
+			fitness: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
 			other: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
 		};
-		return colors[category];
+		return colors[category] || colors.other;
 	}
 
 	getCategoryChartColor(category: ServiceCategory): string {
 		const colors: Record<ServiceCategory, string> = {
 			streaming: 'rgb(239, 68, 68)',
+			software: 'rgb(99, 102, 241)',
+			gaming: 'rgb(249, 115, 22)',
 			music: 'rgb(34, 197, 94)',
+			news: 'rgb(245, 158, 11)',
 			cloud: 'rgb(59, 130, 246)',
 			productivity: 'rgb(168, 85, 247)',
-			gaming: 'rgb(249, 115, 22)',
+			education: 'rgb(20, 184, 166)',
+			fitness: 'rgb(236, 72, 153)',
 			other: 'rgb(107, 114, 128)'
 		};
-		return colors[category];
+		return colors[category] || colors.other;
 	}
 }
 

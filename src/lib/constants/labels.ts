@@ -43,42 +43,53 @@ export const billingCycleLabels: Record<BillingCycle, string> = {
 	weekly: '週繳',
 	monthly: '月繳',
 	quarterly: '季繳',
-	'semi-annual': '半年繳',
-	annual: '年繳'
+	yearly: '年繳',
+	lifetime: '終身',
+	custom: '自訂'
 };
 
 export const subscriptionStatusLabels: Record<SubscriptionStatus, string> = {
 	active: '啟用中',
 	paused: '已暫停',
 	cancelled: '已取消',
+	trial: '試用中',
 	expired: '已過期'
 };
 
 export const subscriptionStatusColors: Record<
 	SubscriptionStatus,
-	'success' | 'default' | 'warning' | 'error'
+	'success' | 'default' | 'warning' | 'error' | 'info'
 > = {
 	active: 'success',
 	paused: 'warning',
 	cancelled: 'error',
+	trial: 'info',
 	expired: 'default'
 };
 
 export const categoryLabels: Record<ServiceCategory, string> = {
 	streaming: '影音串流',
+	software: '軟體',
+	gaming: '遊戲',
 	music: '音樂',
+	news: '新聞',
 	cloud: '雲端儲存',
 	productivity: '生產力工具',
-	gaming: '遊戲',
+	education: '教育',
+	fitness: '健身',
 	other: '其他'
 };
 
 export const categoryColors: Record<ServiceCategory, string> = {
 	streaming: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+	software: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+	gaming: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
 	music: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+	news: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
 	cloud: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
 	productivity: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-	gaming: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+	education: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
+	fitness: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
 	other: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
 };
 
@@ -121,7 +132,11 @@ export const notificationTypeLabels: Record<string, string> = {
 	error: '錯誤',
 	security: '安全',
 	subscription: '訂閱',
-	system: '系統'
+	subscription_reminder: '訂閱提醒',
+	payment: '付款',
+	marketing: '行銷',
+	system: '系統',
+	other: '其他'
 };
 
 export const notificationTypeColors: Record<string, string> = {
@@ -131,5 +146,9 @@ export const notificationTypeColors: Record<string, string> = {
 	error: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 	security: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
 	subscription: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-	system: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
+	subscription_reminder: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+	payment: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+	marketing: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
+	system: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400',
+	other: 'bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400'
 };

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
 	import type { Subscription } from '$lib/types';
-	import type { CalendarDayData } from '$lib/services';
+	import type { CalendarDayData } from '$lib/modules/subscriptions';
 	import { ChevronLeft, ChevronRight } from 'lucide-svelte';
 
 	interface Props {
@@ -88,7 +88,9 @@
 
 	function handleDayClick(day: ReturnType<typeof calendarGrid>[0]) {
 		if (day.date && day.data) {
-			onDayClick?.(day.dateStr, day.data.subscriptions, day.data.totalAmount);
+			// Convert CalendarDayData subscriptions to Subscription[] for the callback
+			const subscriptions = day.data.subscriptions as unknown as Subscription[];
+			onDayClick?.(day.dateStr, subscriptions, day.data.totalAmount);
 		}
 	}
 

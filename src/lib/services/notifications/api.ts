@@ -31,6 +31,39 @@ interface UnreadCountResponse {
 	count: number;
 }
 
+/**
+ * 後端通知設定結構
+ */
+export interface BackendNotificationSettings {
+	email: {
+		enabled: boolean;
+		subscriptionReminders: boolean;
+		paymentAlerts: boolean;
+		systemUpdates: boolean;
+		marketing: boolean;
+	};
+	push: {
+		enabled: boolean;
+		subscriptionReminders: boolean;
+		paymentAlerts: boolean;
+		systemUpdates: boolean;
+		marketing: boolean;
+	};
+	inApp: {
+		enabled: boolean;
+		subscriptionReminders: boolean;
+		paymentAlerts: boolean;
+		systemUpdates: boolean;
+		marketing: boolean;
+	};
+	quietHours: {
+		enabled: boolean;
+		start: string;
+		end: string;
+		timezone: string;
+	};
+}
+
 // ============================================================================
 // Notification API
 // ============================================================================
@@ -38,6 +71,7 @@ interface UnreadCountResponse {
 export const notificationApi = {
 	/**
 	 * 取得通知列表（分頁）
+	 * GET /api/v1/notifications
 	 */
 	async getNotifications(params: GetNotificationsParams = {}): Promise<PaginatedData<Notification>> {
 		const searchParams = new URLSearchParams();
@@ -65,6 +99,7 @@ export const notificationApi = {
 
 	/**
 	 * 取得單一通知
+	 * GET /api/v1/notifications/{id}
 	 */
 	async getNotification(id: string): Promise<Notification> {
 		try {
@@ -79,6 +114,7 @@ export const notificationApi = {
 
 	/**
 	 * 取得未讀通知數量
+	 * GET /api/v1/notifications/unread-count
 	 */
 	async getUnreadCount(): Promise<number> {
 		const response = await apiClient.get<UnreadCountResponse>('/notifications/unread-count');
@@ -87,6 +123,7 @@ export const notificationApi = {
 
 	/**
 	 * 取得通知統計
+	 * GET /api/v1/notifications/statistics
 	 */
 	async getStatistics(): Promise<NotificationStatistics> {
 		return apiClient.get<NotificationStatistics>('/notifications/statistics');
@@ -94,6 +131,7 @@ export const notificationApi = {
 
 	/**
 	 * 標記通知為已讀
+	 * POST /api/v1/notifications/{id}/read
 	 */
 	async markAsRead(notificationId: string): Promise<Notification> {
 		try {
@@ -108,6 +146,7 @@ export const notificationApi = {
 
 	/**
 	 * 標記所有通知為已讀
+	 * POST /api/v1/notifications/mark-all-read
 	 */
 	async markAllAsRead(): Promise<void> {
 		await apiClient.post('/notifications/mark-all-read');
@@ -115,6 +154,7 @@ export const notificationApi = {
 
 	/**
 	 * 刪除通知
+	 * DELETE /api/v1/notifications/{id}
 	 */
 	async deleteNotification(notificationId: string): Promise<void> {
 		try {
@@ -129,6 +169,7 @@ export const notificationApi = {
 
 	/**
 	 * 清除所有通知
+	 * DELETE /api/v1/notifications/clear
 	 */
 	async clearAllNotifications(): Promise<void> {
 		await apiClient.delete('/notifications/clear');
@@ -136,16 +177,99 @@ export const notificationApi = {
 
 	/**
 	 * 取得通知設定
+	 * GET /api/v1/notifications/settings
 	 */
 	async getSettings(): Promise<NotificationSettings> {
-		return apiClient.get<NotificationSettings>('/notifications/settings');
+		const backendSettings = await apiClient.get<BackendNotificationSettings>('/notifications/settings');
+
+		// 將後端設定轉換為前端格式
+		return {
+			email: {
+				enabled: backendSettings.email.enabled,
+				securityAlerts: true, // 後端沒有此欄位，使用預設值
+				loginNotifications: true,
+				systemUpdates: backendSettings.email.systemUpdates,
+				weeklyReport: false,
+				subscriptionReminders: backendSettings.email.subscriptionReminders,
+				marketing: backendSettings.email.marketing
+			},
+			push: {
+				enabled: backendSettings.push.enabled,
+				permission: 'default',
+				securityAlerts: true,
+				loginNotifications: true,
+				systemAlerts: backendSettings.push.systemUpdates,
+				mentions: true,
+				subscriptionReminders: backendSettings.push.subscriptionReminders
+			},
+			inApp: {
+				enabled: backendSettings.inApp.enabled,
+				showBadge: true,
+				playSound: true,
+				desktopPopup: true,
+				autoMarkRead: false
+			},
+			quietHours: {
+				enabled: backendSettings.quietHours.enabled,
+				startTime: backendSettings.quietHours.start,
+				endTime: backendSettings.quietHours.end,
+				timezone: backendSettings.quietHours.timezone,
+				allowUrgent: true
+			}
+		};
 	},
 
 	/**
 	 * 更新通知設定
+	 * PUT/PATCH /api/v1/notifications/settings
 	 */
 	async updateSettings(settings: Partial<NotificationSettings>): Promise<NotificationSettings> {
-		return apiClient.patch<NotificationSettings>('/notifications/settings', settings);
+		// 將前端設定轉換為後端格式
+		const backendPayload: Partial<BackendNotificationSettings> = {};
+
+		if (settings.email) {
+			backendPayload.email = {
+				enabled: settings.email.enabled,
+				subscriptionReminders: settings.email.subscriptionReminders,
+				paymentAlerts: true,
+				systemUpdates: settings.email.systemUpdates,
+				marketing: settings.email.marketing
+			};
+		}
+
+		if (settings.push) {
+			backendPayload.push = {
+				enabled: settings.push.enabled,
+				subscriptionReminders: settings.push.subscriptionReminders,
+				paymentAlerts: true,
+				systemUpdates: settings.push.systemAlerts ?? true,
+				marketing: false
+			};
+		}
+
+		if (settings.inApp) {
+			backendPayload.inApp = {
+				enabled: settings.inApp.enabled,
+				subscriptionReminders: true,
+				paymentAlerts: true,
+				systemUpdates: true,
+				marketing: true
+			};
+		}
+
+		if (settings.quietHours) {
+			backendPayload.quietHours = {
+				enabled: settings.quietHours.enabled,
+				start: settings.quietHours.startTime,
+				end: settings.quietHours.endTime,
+				timezone: settings.quietHours.timezone
+			};
+		}
+
+		await apiClient.patch<BackendNotificationSettings>('/notifications/settings', backendPayload);
+
+		// 重新取得完整設定
+		return this.getSettings();
 	},
 
 	/**

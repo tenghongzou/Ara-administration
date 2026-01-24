@@ -13,6 +13,13 @@
 
 	const displayReminders = $derived(reminders.slice(0, maxDisplay));
 	const remainingCount = $derived(reminders.length - maxDisplay);
+
+	// Map UpcomingReminder type to ReminderType
+	function getReminderType(type: UpcomingReminder['type']): 'overdue' | 'due_today' | 'due_soon' {
+		if (type === 'overdue') return 'overdue';
+		if (type === 'due_today') return 'due_today';
+		return 'due_soon';
+	}
 </script>
 
 {#if reminders.length > 0}
@@ -35,9 +42,10 @@
 		{#snippet children()}
 			<div class="divide-y divide-gray-100 dark:divide-gray-800">
 				{#each displayReminders as reminder}
-					{@const badgeInfo = dashboardService.getReminderBadge(reminder.reminderType)}
+					{@const reminderType = getReminderType(reminder.type)}
+					{@const badgeInfo = dashboardService.getReminderBadge(reminderType)}
 					<a
-						href="/subscriptions/{reminder.subscription.id}"
+						href="/subscriptions/{reminder.subscriptionId}"
 						class="flex items-center justify-between py-3 px-1 hover:bg-gray-50 dark:hover:bg-gray-800/50 -mx-1 rounded-lg transition-colors"
 					>
 						<div class="flex items-center gap-3">
@@ -48,19 +56,19 @@
 							</div>
 							<div>
 								<p class="font-medium text-gray-900 dark:text-gray-100">
-									{reminder.subscription.name}
+									{reminder.name}
 								</p>
 								<p class="text-sm text-gray-500 dark:text-gray-400">
-									{dashboardService.formatCurrency(reminder.subscription.cost, reminder.subscription.currency)}
-									· {dashboardService.getDaysLabel(reminder.daysUntilBilling)}
+									{dashboardService.formatCurrency(reminder.amount, reminder.currency)}
+									· {dashboardService.getDaysLabel(reminder.daysUntil)}
 								</p>
 							</div>
 						</div>
 						<div class="flex items-center gap-2">
 							<Badge variant={badgeInfo.variant}>{badgeInfo.label}</Badge>
-							{#if reminder.reminderType === 'overdue'}
+							{#if reminderType === 'overdue'}
 								<AlertTriangle class="w-4 h-4 text-red-500" />
-							{:else if reminder.reminderType === 'due_today'}
+							{:else if reminderType === 'due_today'}
 								<Clock class="w-4 h-4 text-yellow-500" />
 							{/if}
 						</div>

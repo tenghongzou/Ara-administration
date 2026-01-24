@@ -1,5 +1,6 @@
 /**
  * 角色管理 API 模組
+ * 對接後端 /api/v1/roles 和 /api/v1/permissions 端點
  */
 
 import type { Role, CreateRoleData, UpdateRoleData, PaginatedData } from '$lib/types';
@@ -27,14 +28,18 @@ interface RolesResponse {
 	};
 }
 
-// apiClient 自動解包 data，因此類型定義直接反映解包後的結構
-
+/**
+ * 權限群組結構
+ */
 export interface PermissionGroup {
 	key: string;
 	label: string;
 	permissions: Permission[];
 }
 
+/**
+ * 單一權限結構
+ */
 export interface Permission {
 	id: string;
 	key: string;
@@ -60,6 +65,8 @@ const ERROR_MESSAGES: Record<string, string> = {
 export const rolesApi = {
 	/**
 	 * 取得角色列表
+	 * GET /api/v1/roles
+	 * 注意：後端目前返回 { data: [...] } 格式，apiClient 會自動解包成數組
 	 */
 	async getRoles(params: GetRolesParams = {}): Promise<PaginatedData<Role>> {
 		const searchParams = new URLSearchParams();
@@ -71,7 +78,22 @@ export const rolesApi = {
 		if (params.sortDirection) searchParams.set('sortDirection', params.sortDirection);
 
 		const query = searchParams.toString();
-		const response = await apiClient.get<RolesResponse>(`/roles${query ? `?${query}` : ''}`);
+		const response = await apiClient.get<Role[] | RolesResponse>(`/roles${query ? `?${query}` : ''}`);
+
+		// 處理兩種可能的響應格式：
+		// 1. 數組（apiClient 已解包 { data: [...] }）
+		// 2. 完整分頁響應 { data: [...], pagination: {...} }
+		if (Array.isArray(response)) {
+			return {
+				data: response,
+				pagination: {
+					page: 1,
+					pageSize: response.length,
+					total: response.length,
+					totalPages: 1
+				}
+			};
+		}
 
 		return {
 			data: response.data,
@@ -81,10 +103,10 @@ export const rolesApi = {
 
 	/**
 	 * 取得單一角色
+	 * GET /api/v1/roles/{id}
 	 */
 	async getRole(id: string): Promise<Role> {
 		try {
-			// apiClient 自動解包 { data: Role } 回應
 			return await apiClient.get<Role>(`/roles/${id}`);
 		} catch (error) {
 			if (error instanceof ApiError && error.isNotFound()) {
@@ -109,10 +131,10 @@ export const rolesApi = {
 
 	/**
 	 * 建立角色
+	 * POST /api/v1/roles
 	 */
 	async createRole(data: CreateRoleData): Promise<Role> {
 		try {
-			// apiClient 自動解包 { data: Role } 回應
 			return await apiClient.post<Role>('/roles', data);
 		} catch (error) {
 			if (error instanceof ApiError) {
@@ -124,10 +146,10 @@ export const rolesApi = {
 
 	/**
 	 * 更新角色
+	 * PUT/PATCH /api/v1/roles/{id}
 	 */
 	async updateRole(id: string, data: UpdateRoleData): Promise<Role> {
 		try {
-			// apiClient 自動解包 { data: Role } 回應
 			return await apiClient.patch<Role>(`/roles/${id}`, data);
 		} catch (error) {
 			if (error instanceof ApiError) {
@@ -142,6 +164,7 @@ export const rolesApi = {
 
 	/**
 	 * 刪除角色
+	 * DELETE /api/v1/roles/{id}
 	 */
 	async deleteRole(id: string): Promise<void> {
 		try {
@@ -177,13 +200,24 @@ export const rolesApi = {
 
 	/**
 	 * 獲取所有權限（按分組）
+	 * GET /api/v1/permissions
+	 * 等同於 GET /api/v1/permissions/grouped
 	 */
 	async getPermissions(): Promise<PermissionGroup[]> {
 		return apiClient.get<PermissionGroup[]>('/permissions');
 	},
 
 	/**
+	 * 獲取所有權限（按分組）- 別名
+	 * GET /api/v1/permissions/grouped
+	 */
+	async getPermissionsGrouped(): Promise<PermissionGroup[]> {
+		return apiClient.get<PermissionGroup[]>('/permissions/grouped');
+	},
+
+	/**
 	 * 獲取所有權限（扁平列表）
+	 * GET /api/v1/permissions/flat
 	 */
 	async getPermissionsFlat(): Promise<Permission[]> {
 		return apiClient.get<Permission[]>('/permissions/flat');

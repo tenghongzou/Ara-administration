@@ -29,7 +29,7 @@ class RolesService {
 	 * 檢查是否為管理員角色
 	 */
 	isAdminRole(role: Role): boolean {
-		return role.isSystem && role.key === 'admin';
+		return (role.isSystem === true) && role.key === 'admin';
 	}
 
 	/**
@@ -43,7 +43,7 @@ class RolesService {
 	 * 檢查角色是否可刪除
 	 */
 	canDeleteRole(role: Role): boolean {
-		return !role.isSystem;
+		return role.isSystem !== true;
 	}
 
 	// ==================== 驗證方法 ====================
@@ -185,7 +185,7 @@ class RolesService {
 		}
 
 		if (filters.isSystem !== undefined) {
-			result = result.filter((role) => role.isSystem === filters.isSystem);
+			result = result.filter((role) => (role.isSystem === true) === filters.isSystem);
 		}
 
 		return result;

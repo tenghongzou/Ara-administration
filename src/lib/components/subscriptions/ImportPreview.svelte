@@ -135,13 +135,13 @@
 							{sub.data.name}
 						</td>
 						<td class="px-4 py-3 text-gray-600 dark:text-gray-400">
-							{categoryLabels[sub.data.category] || sub.data.category}
+							{sub.data.category ? (categoryLabels[sub.data.category] || sub.data.category) : '-'}
 						</td>
 						<td class="px-4 py-3 text-gray-900 dark:text-gray-100">
 							{formatCurrency(sub.data.cost, sub.data.currency)}
 						</td>
 						<td class="px-4 py-3 text-gray-600 dark:text-gray-400">
-							{billingCycleLabels[sub.data.billingCycle] || sub.data.billingCycle}
+							{sub.data.billingCycle ? (billingCycleLabels[sub.data.billingCycle] || sub.data.billingCycle) : '-'}
 						</td>
 						<td class="px-4 py-3 text-gray-600 dark:text-gray-400">
 							{sub.data.nextBillingDate}

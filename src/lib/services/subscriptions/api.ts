@@ -1,5 +1,6 @@
 /**
  * 訂閱管理 API 模組
+ * 對接後端 /api/v1/subscriptions 端點
  */
 
 import type {
@@ -40,35 +41,58 @@ interface SubscriptionsResponse {
 	};
 }
 
+/**
+ * 後端 /subscriptions/stats 回傳格式
+ */
+interface SubscriptionStatsResponse {
+	totalSubscriptions: number;
+	activeSubscriptions: number;
+	monthlySpending: number;
+	yearlySpending: number;
+}
+
 export interface UpcomingReminder {
-	subscription: Subscription;
-	daysUntilBilling: number;
-	reminderType: 'due_soon' | 'due_today' | 'overdue';
+	subscriptionId: string;
+	name: string;
+	type: 'billing_due' | 'overdue' | 'due_today' | 'due_soon';
+	daysUntil: number;
+	amount: number;
+	currency: string;
 }
 
 export interface MonthlySpending {
 	month: string;
-	amount: number;
+	spending: number;
 	count: number;
 }
 
 export interface CategorySpending {
-	category: ServiceCategory;
-	amount: number;
+	category: string;
+	label: string;
+	count: number;
+	totalCost: number;
 	percentage: number;
-	count?: number;
 }
 
 export interface AnalyticsData {
 	monthlyTrend: MonthlySpending[];
 	categoryBreakdown: CategorySpending[];
-	yearlyProjection: number;
-	averageMonthly: number;
+	topSubscriptions: {
+		id: string;
+		name: string;
+		cost: number;
+		currency: string;
+	}[];
 }
 
 export interface CalendarDayData {
 	date: string;
-	subscriptions: Subscription[];
+	subscriptions: {
+		id: string;
+		name: string;
+		cost: number;
+		currency: string;
+	}[];
 	totalAmount: number;
 }
 
@@ -83,7 +107,7 @@ export interface CreatePaymentData {
 	amount?: number;
 	currency?: string;
 	paidAt?: string;
-	status?: 'paid' | 'failed' | 'pending';
+	status?: 'paid' | 'pending' | 'failed' | 'refunded';
 	note?: string;
 }
 
@@ -94,6 +118,7 @@ export interface CreatePaymentData {
 export const subscriptionsApi = {
 	/**
 	 * 取得訂閱列表
+	 * GET /api/v1/subscriptions
 	 */
 	async getSubscriptions(params: GetSubscriptionsParams = {}): Promise<PaginatedData<Subscription>> {
 		if (config.isMockMode) {
@@ -129,6 +154,7 @@ export const subscriptionsApi = {
 
 	/**
 	 * 取得單一訂閱
+	 * GET /api/v1/subscriptions/{id}
 	 */
 	async getSubscription(id: string): Promise<Subscription> {
 		if (config.isMockMode) {
@@ -147,6 +173,7 @@ export const subscriptionsApi = {
 
 	/**
 	 * 建立訂閱
+	 * POST /api/v1/subscriptions
 	 */
 	async createSubscription(data: CreateSubscriptionData): Promise<Subscription> {
 		if (config.isMockMode) {
@@ -165,10 +192,28 @@ export const subscriptionsApi = {
 
 	/**
 	 * 更新訂閱
+	 * PUT/PATCH /api/v1/subscriptions/{id}
 	 */
 	async updateSubscription(id: string, data: UpdateSubscriptionData): Promise<Subscription> {
 		if (config.isMockMode) {
-			return mockSubscriptionsApi.updateSubscription(id, data);
+			// Convert UpdateSubscriptionData to Partial<Subscription> for mock API
+			const mockData: Partial<Subscription> = {};
+			if (data.name !== undefined) mockData.name = data.name;
+			if (data.logo !== undefined) mockData.logo = data.logo;
+			if (data.category !== undefined) mockData.category = data.category;
+			if (data.cost !== undefined) mockData.cost = data.cost;
+			if (data.currency !== undefined) mockData.currency = data.currency;
+			if (data.billingCycle !== undefined) mockData.billingCycle = data.billingCycle;
+			if (data.nextBillingDate !== undefined) mockData.nextBillingDate = data.nextBillingDate;
+			if (data.status !== undefined) mockData.status = data.status;
+			if (data.description !== undefined) mockData.description = data.description ?? undefined;
+			if (data.website !== undefined) mockData.website = data.website ?? undefined;
+			if (data.accountEmail !== undefined) mockData.accountEmail = data.accountEmail ?? undefined;
+			if (data.paymentMethod !== undefined) mockData.paymentMethod = data.paymentMethod ?? undefined;
+			if (data.autoRenew !== undefined) mockData.autoRenew = data.autoRenew;
+			if (data.reminderDays !== undefined) mockData.reminderDays = data.reminderDays ?? undefined;
+			if (data.startDate !== undefined) mockData.startDate = data.startDate;
+			return mockSubscriptionsApi.updateSubscription(id, mockData);
 		}
 
 		try {
@@ -186,6 +231,7 @@ export const subscriptionsApi = {
 
 	/**
 	 * 刪除訂閱
+	 * DELETE /api/v1/subscriptions/{id}
 	 */
 	async deleteSubscription(id: string): Promise<void> {
 		if (config.isMockMode) {
@@ -204,6 +250,7 @@ export const subscriptionsApi = {
 
 	/**
 	 * 取得訂閱統計
+	 * GET /api/v1/subscriptions/stats
 	 */
 	async getStatistics(): Promise<SubscriptionStats> {
 		if (config.isMockMode) {
@@ -216,17 +263,18 @@ export const subscriptionsApi = {
 			};
 		}
 
-		const data = await apiClient.get<SubscriptionStats>('/subscriptions/stats');
+		const data = await apiClient.get<SubscriptionStatsResponse>('/subscriptions/stats');
 		return {
-			totalMonthly: data.totalMonthly ?? 0,
-			totalYearly: data.totalYearly ?? 0,
-			upcomingCount: data.upcomingCount ?? 0,
-			activeCount: data.activeCount ?? 0
+			totalMonthly: data.monthlySpending ?? 0,
+			totalYearly: data.yearlySpending ?? 0,
+			upcomingCount: 0, // 後端 stats 沒有此欄位，需要從 upcoming 取得
+			activeCount: data.activeSubscriptions ?? 0
 		};
 	},
 
 	/**
 	 * 取得即將到期的訂閱
+	 * GET /api/v1/subscriptions/upcoming
 	 */
 	async getUpcoming(days: number = 7): Promise<Subscription[]> {
 		if (config.isMockMode) {
@@ -242,15 +290,18 @@ export const subscriptionsApi = {
 
 	/**
 	 * 取得即將到期的訂閱提醒
+	 * GET /api/v1/subscriptions/reminders
 	 */
 	async getUpcomingReminders(days: number = 7): Promise<UpcomingReminder[]> {
 		if (config.isMockMode) {
 			const reminders = await mockSubscriptionsApi.getUpcomingReminders(days);
-			const { data: subs } = await mockSubscriptionsApi.getSubscriptions();
 			return reminders.map((r) => ({
-				subscription: subs.find((s) => s.id === r.subscriptionId)!,
-				daysUntilBilling: r.daysUntilDue,
-				reminderType: r.type
+				subscriptionId: r.subscriptionId,
+				name: r.subscriptionName || '',
+				type: r.type === 'overdue' ? 'overdue' : r.type === 'due_today' ? 'due_today' : 'due_soon',
+				daysUntil: r.daysUntilDue,
+				amount: r.amount || 0,
+				currency: r.currency || 'TWD'
 			}));
 		}
 
@@ -259,6 +310,7 @@ export const subscriptionsApi = {
 
 	/**
 	 * 取得付款歷史
+	 * GET /api/v1/subscriptions/{id}/payments
 	 */
 	async getPaymentHistory(subscriptionId: string): Promise<PaymentHistory[]> {
 		if (config.isMockMode) {
@@ -270,6 +322,7 @@ export const subscriptionsApi = {
 
 	/**
 	 * 新增付款記錄
+	 * POST /api/v1/subscriptions/{id}/payments
 	 */
 	async createPayment(subscriptionId: string, data: CreatePaymentData): Promise<PaymentHistory> {
 		return apiClient.post<PaymentHistory>(
@@ -280,19 +333,20 @@ export const subscriptionsApi = {
 
 	/**
 	 * 取得訂閱分析數據
+	 * GET /api/v1/subscriptions/analytics
 	 */
 	async getAnalytics(): Promise<AnalyticsData> {
 		const data = await apiClient.get<AnalyticsData>('/subscriptions/analytics');
 		return {
 			monthlyTrend: data.monthlyTrend || [],
 			categoryBreakdown: data.categoryBreakdown || [],
-			yearlyProjection: data.yearlyProjection ?? 0,
-			averageMonthly: data.averageMonthly ?? 0
+			topSubscriptions: data.topSubscriptions || []
 		};
 	},
 
 	/**
 	 * 取得日曆視圖數據
+	 * GET /api/v1/subscriptions/calendar
 	 */
 	async getCalendarData(year: number, month: number): Promise<CalendarDayData[]> {
 		return apiClient.get<CalendarDayData[]>(
@@ -302,6 +356,7 @@ export const subscriptionsApi = {
 
 	/**
 	 * 批量匯入訂閱
+	 * 使用 POST /api/v1/subscriptions 逐一建立
 	 */
 	async importSubscriptions(data: CreateSubscriptionData[]): Promise<ImportResult> {
 		let success = 0;
