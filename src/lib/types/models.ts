@@ -221,18 +221,18 @@ export interface SubscriptionFilters {
  * Response:
  * {
  *   "data": {
- *     "totalSubscriptions": 15,
- *     "activeSubscriptions": 12,
- *     "monthlySpending": 2500.00,
- *     "yearlySpending": 30000.00
+ *     "totalMonthly": 6389,
+ *     "totalYearly": 76673,
+ *     "upcomingCount": 0,
+ *     "activeCount": 9
  *   }
  * }
  */
 export interface SubscriptionStats {
-	totalSubscriptions: number;
-	activeSubscriptions: number;
-	monthlySpending: number;
-	yearlySpending: number;
+	totalMonthly: number;
+	totalYearly: number;
+	upcomingCount: number;
+	activeCount: number;
 }
 
 // 通知設定

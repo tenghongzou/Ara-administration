@@ -59,18 +59,18 @@ export interface SubscriptionFormErrors {
  * 後端實際返回：
  * {
  *   "data": {
- *     "totalSubscriptions": 15,
- *     "activeSubscriptions": 12,
- *     "monthlySpending": 2500.00,
- *     "yearlySpending": 30000.00
+ *     "totalMonthly": 6389,
+ *     "totalYearly": 76673,
+ *     "upcomingCount": 0,
+ *     "activeCount": 9
  *   }
  * }
  */
 export interface SubscriptionStatsDisplay {
-	totalSubscriptions: number;      // 總訂閱數量
-	activeSubscriptions: number;     // 啟用中訂閱數量
-	monthlySpending: string;         // 格式化後的月費總計貨幣字串
-	yearlySpending: string;          // 格式化後的年費總計貨幣字串
+	totalMonthly: string;      // 格式化後的月費總計貨幣字串
+	totalYearly: string;       // 格式化後的年費總計貨幣字串
+	upcomingCount: number;     // 即將到期數量
+	activeCount: number;       // 啟用中訂閱數量
 }
 
 export interface MonthlySpending {

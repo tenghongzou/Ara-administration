@@ -36,7 +36,7 @@
 				<div>
 					<p class="text-sm text-gray-500 dark:text-gray-400">月費總計</p>
 					<p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-						{formatted.monthlySpending}
+						{formatted.totalMonthly}
 					</p>
 				</div>
 			</div>
@@ -66,7 +66,7 @@
 				<div>
 					<p class="text-sm text-gray-500 dark:text-gray-400">年費總計</p>
 					<p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-						{formatted.yearlySpending}
+						{formatted.totalYearly}
 					</p>
 				</div>
 			</div>
@@ -96,7 +96,7 @@
 				<div>
 					<p class="text-sm text-gray-500 dark:text-gray-400">啟用中訂閱</p>
 					<p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-						{formatted.activeSubscriptions} 筆
+						{formatted.activeCount} 筆
 					</p>
 				</div>
 			</div>

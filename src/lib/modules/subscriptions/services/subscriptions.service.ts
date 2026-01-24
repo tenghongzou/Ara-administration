@@ -58,18 +58,18 @@ class SubscriptionsService {
 	 *
 	 * 後端返回格式：
 	 * {
-	 *   "totalSubscriptions": 15,
-	 *   "activeSubscriptions": 12,
-	 *   "monthlySpending": 2500.00,
-	 *   "yearlySpending": 30000.00
+	 *   "totalMonthly": 6389,
+	 *   "totalYearly": 76673,
+	 *   "upcomingCount": 0,
+	 *   "activeCount": 9
 	 * }
 	 */
 	formatStats(stats: SubscriptionStats): SubscriptionStatsDisplay {
 		return {
-			totalSubscriptions: stats.totalSubscriptions ?? 0,
-			activeSubscriptions: stats.activeSubscriptions ?? 0,
-			monthlySpending: this.formatCurrency(stats.monthlySpending ?? 0),
-			yearlySpending: this.formatCurrency(stats.yearlySpending ?? 0)
+			totalMonthly: this.formatCurrency(stats.totalMonthly ?? 0),
+			totalYearly: this.formatCurrency(stats.totalYearly ?? 0),
+			upcomingCount: stats.upcomingCount ?? 0,
+			activeCount: stats.activeCount ?? 0
 		};
 	}
 

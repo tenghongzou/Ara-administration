@@ -299,10 +299,10 @@ export const subscriptionsApi = {
 	 * 後端回應格式：
 	 * {
 	 *   "data": {
-	 *     "totalSubscriptions": 15,
-	 *     "activeSubscriptions": 12,
-	 *     "monthlySpending": 2500.00,
-	 *     "yearlySpending": 30000.00
+	 *     "totalMonthly": 6389,
+	 *     "totalYearly": 76673,
+	 *     "upcomingCount": 0,
+	 *     "activeCount": 9
 	 *   }
 	 * }
 	 */
@@ -310,10 +310,10 @@ export const subscriptionsApi = {
 		if (config.isMockMode) {
 			const stats = await mockSubscriptionsApi.getStatistics();
 			return {
-				totalSubscriptions: stats.totalCount,
-				activeSubscriptions: stats.activeCount,
-				monthlySpending: stats.monthlySpending,
-				yearlySpending: stats.yearlySpending
+				totalMonthly: stats.monthlySpending,
+				totalYearly: stats.yearlySpending,
+				upcomingCount: stats.upcomingCount,
+				activeCount: stats.activeCount
 			};
 		}
 
