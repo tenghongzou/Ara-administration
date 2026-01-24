@@ -55,12 +55,22 @@ export interface SubscriptionFormErrors {
 /**
  * 用於 UI 顯示的格式化統計數據
  * 對應後端 GET /api/v1/subscriptions/stats 回應
+ *
+ * 後端實際返回：
+ * {
+ *   "data": {
+ *     "totalSubscriptions": 15,
+ *     "activeSubscriptions": 12,
+ *     "monthlySpending": 2500.00,
+ *     "yearlySpending": 30000.00
+ *   }
+ * }
  */
 export interface SubscriptionStatsDisplay {
-	totalSubscriptions: number;
-	activeSubscriptions: number;
-	monthlySpending: string;  // 格式化後的貨幣字串
-	yearlySpending: string;   // 格式化後的貨幣字串
+	totalSubscriptions: number;      // 總訂閱數量
+	activeSubscriptions: number;     // 啟用中訂閱數量
+	monthlySpending: string;         // 格式化後的月費總計貨幣字串
+	yearlySpending: string;          // 格式化後的年費總計貨幣字串
 }
 
 export interface MonthlySpending {

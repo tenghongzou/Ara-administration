@@ -9,7 +9,6 @@ import type {
 	CreateSubscriptionData,
 	UpdateSubscriptionData,
 	SubscriptionStats,
-	ServiceCategory,
 	PaginatedData
 } from '$lib/types';
 import { apiClient, ApiError } from '../core/api-client';
@@ -41,6 +40,10 @@ interface SubscriptionsResponse {
 	};
 }
 
+/**
+ * 訂閱提醒
+ * GET /api/v1/subscriptions/reminders
+ */
 export interface UpcomingReminder {
 	subscriptionId: string;
 	name: string;
@@ -51,12 +54,20 @@ export interface UpcomingReminder {
 	currency: string;
 }
 
+/**
+ * 月度消費趨勢
+ * GET /api/v1/subscriptions/analytics
+ */
 export interface MonthlySpending {
 	month: string;
 	spending: number;
 	count: number;
 }
 
+/**
+ * 分類消費統計
+ * GET /api/v1/subscriptions/analytics
+ */
 export interface CategorySpending {
 	category: string;
 	label: string;
@@ -65,6 +76,10 @@ export interface CategorySpending {
 	percentage: number;
 }
 
+/**
+ * 訂閱分析數據
+ * GET /api/v1/subscriptions/analytics
+ */
 export interface AnalyticsData {
 	monthlyTrend: MonthlySpending[];
 	categoryBreakdown: CategorySpending[];
@@ -76,6 +91,10 @@ export interface AnalyticsData {
 	}[];
 }
 
+/**
+ * 日曆視圖數據
+ * GET /api/v1/subscriptions/calendar
+ */
 export interface CalendarDayData {
 	date: string;
 	subscriptions: {
@@ -94,6 +113,10 @@ export interface ImportResult {
 	errors: { row: number; field: string; message: string }[];
 }
 
+/**
+ * 建立付款記錄請求
+ * POST /api/v1/subscriptions/{id}/payments
+ */
 export interface CreatePaymentData {
 	amount?: number;
 	currency?: string;
@@ -110,6 +133,16 @@ export const subscriptionsApi = {
 	/**
 	 * 取得訂閱列表
 	 * GET /api/v1/subscriptions
+	 *
+	 * 查詢參數：
+	 * - page: 頁碼 (預設 1)
+	 * - pageSize: 每頁數量 (預設 10，最大 100)
+	 * - search: 搜尋關鍵字 (比對訂閱名稱)
+	 * - category: 分類篩選
+	 * - status: 狀態篩選
+	 * - billingCycle: 計費週期篩選
+	 * - sortBy: 排序欄位 (預設 nextBillingDate)
+	 * - sortDirection: 排序方向 (asc, desc)
 	 */
 	async getSubscriptions(params: GetSubscriptionsParams = {}): Promise<PaginatedData<Subscription>> {
 		if (config.isMockMode) {
@@ -165,6 +198,24 @@ export const subscriptionsApi = {
 	/**
 	 * 建立訂閱
 	 * POST /api/v1/subscriptions
+	 *
+	 * 請求格式：
+	 * {
+	 *   "name": "Disney+",
+	 *   "cost": 270,
+	 *   "currency": "TWD",
+	 *   "category": "streaming",
+	 *   "billingCycle": "monthly",
+	 *   "nextBillingDate": "2024-02-01",
+	 *   "status": "active",
+	 *   "description": "Family Plan",
+	 *   "website": "https://www.disneyplus.com",
+	 *   "accountEmail": "user@example.com",
+	 *   "paymentMethod": "Credit Card",
+	 *   "autoRenew": true,
+	 *   "reminderDays": 3,
+	 *   "startDate": "2024-01-01"
+	 * }
 	 */
 	async createSubscription(data: CreateSubscriptionData): Promise<Subscription> {
 		if (config.isMockMode) {
@@ -223,6 +274,8 @@ export const subscriptionsApi = {
 	/**
 	 * 刪除訂閱
 	 * DELETE /api/v1/subscriptions/{id}
+	 *
+	 * 回應：204 No Content
 	 */
 	async deleteSubscription(id: string): Promise<void> {
 		if (config.isMockMode) {
@@ -243,7 +296,7 @@ export const subscriptionsApi = {
 	 * 取得訂閱統計
 	 * GET /api/v1/subscriptions/stats
 	 *
-	 * 後端返回格式：
+	 * 後端回應格式：
 	 * {
 	 *   "data": {
 	 *     "totalSubscriptions": 15,
@@ -270,6 +323,9 @@ export const subscriptionsApi = {
 	/**
 	 * 取得即將到期的訂閱
 	 * GET /api/v1/subscriptions/upcoming
+	 *
+	 * 查詢參數：
+	 * - days: 查詢未來幾天內到期的訂閱 (預設 7)
 	 */
 	async getUpcoming(days: number = 7): Promise<Subscription[]> {
 		if (config.isMockMode) {
@@ -287,6 +343,9 @@ export const subscriptionsApi = {
 	 * 取得即將到期的訂閱提醒
 	 * GET /api/v1/subscriptions/reminders
 	 *
+	 * 查詢參數：
+	 * - days: 提醒天數門檻 (預設 7)
+	 *
 	 * 後端返回格式：
 	 * {
 	 *   "data": [
@@ -294,7 +353,7 @@ export const subscriptionsApi = {
 	 *       "subscriptionId": "uuid",
 	 *       "name": "Netflix",
 	 *       "type": "billing_due",
-	 *       "message": "Netflix 將於 3 天後扣款",
+	 *       "message": "Netflix will be charged in 3 days",
 	 *       "daysUntil": 3,
 	 *       "amount": 390,
 	 *       "currency": "TWD"
@@ -321,6 +380,22 @@ export const subscriptionsApi = {
 	/**
 	 * 取得付款歷史
 	 * GET /api/v1/subscriptions/{id}/payments
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": [
+	 *     {
+	 *       "id": "uuid",
+	 *       "subscriptionId": "uuid",
+	 *       "amount": 390.00,
+	 *       "currency": "TWD",
+	 *       "status": "paid",
+	 *       "paidAt": "2024-01-15T00:00:00+00:00",
+	 *       "note": "January payment",
+	 *       "createdAt": "2024-01-15T10:30:00+00:00"
+	 *     }
+	 *   ]
+	 * }
 	 */
 	async getPaymentHistory(subscriptionId: string): Promise<PaymentHistory[]> {
 		if (config.isMockMode) {
@@ -333,6 +408,14 @@ export const subscriptionsApi = {
 	/**
 	 * 新增付款記錄
 	 * POST /api/v1/subscriptions/{id}/payments
+	 *
+	 * 請求格式：
+	 * {
+	 *   "amount": 390.00,
+	 *   "paidAt": "2024-01-15T00:00:00+00:00",
+	 *   "status": "paid",
+	 *   "note": "January subscription payment"
+	 * }
 	 */
 	async createPayment(subscriptionId: string, data: CreatePaymentData): Promise<PaymentHistory> {
 		return apiClient.post<PaymentHistory>(
@@ -344,6 +427,27 @@ export const subscriptionsApi = {
 	/**
 	 * 取得訂閱分析數據
 	 * GET /api/v1/subscriptions/analytics
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": {
+	 *     "monthlyTrend": [
+	 *       { "month": "2024-01", "spending": 2500.00, "count": 12 }
+	 *     ],
+	 *     "categoryBreakdown": [
+	 *       {
+	 *         "category": "streaming",
+	 *         "label": "Streaming",
+	 *         "count": 3,
+	 *         "totalCost": 800.00,
+	 *         "percentage": 32
+	 *       }
+	 *     ],
+	 *     "topSubscriptions": [
+	 *       { "id": "uuid", "name": "Adobe Creative Cloud", "cost": 1680.00, "currency": "TWD" }
+	 *     ]
+	 *   }
+	 * }
 	 */
 	async getAnalytics(): Promise<AnalyticsData> {
 		const data = await apiClient.get<AnalyticsData>('/subscriptions/analytics');
@@ -357,6 +461,22 @@ export const subscriptionsApi = {
 	/**
 	 * 取得日曆視圖數據
 	 * GET /api/v1/subscriptions/calendar
+	 *
+	 * 查詢參數：
+	 * - year: 年份（必須在當前年份 +/- 10 年範圍內）
+	 * - month: 月份 (1-12)
+	 *
+	 * 回應格式：
+	 * {
+	 *   "data": [
+	 *     {
+	 *       "date": "2024-01-15",
+	 *       "subscriptions": [
+	 *         { "id": "uuid", "name": "Netflix", "cost": 390, "currency": "TWD" }
+	 *       ]
+	 *     }
+	 *   ]
+	 * }
 	 */
 	async getCalendarData(year: number, month: number): Promise<CalendarDayData[]> {
 		return apiClient.get<CalendarDayData[]>(

@@ -5,10 +5,9 @@
 
 	interface Props {
 		stats: SubscriptionStats;
-		upcomingCount?: number;
 	}
 
-	let { stats, upcomingCount = 0 }: Props = $props();
+	let { stats }: Props = $props();
 
 	const formatted = $derived(subscriptionsService.formatStats(stats));
 </script>
@@ -90,14 +89,14 @@
 							stroke-linecap="round"
 							stroke-linejoin="round"
 							stroke-width="2"
-							d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+							d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
 						/>
 					</svg>
 				</div>
 				<div>
-					<p class="text-sm text-gray-500 dark:text-gray-400">即將到期 (7天內)</p>
+					<p class="text-sm text-gray-500 dark:text-gray-400">啟用中訂閱</p>
 					<p class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-						{upcomingCount} 筆
+						{formatted.activeSubscriptions} 筆
 					</p>
 				</div>
 			</div>

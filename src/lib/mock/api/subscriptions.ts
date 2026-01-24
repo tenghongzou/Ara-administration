@@ -181,6 +181,7 @@ export const mockSubscriptionsApi = {
 		activeCount: number;
 		monthlySpending: number;
 		yearlySpending: number;
+		upcomingCount: number;
 		byCategory: Record<string, number>;
 		byStatus: Record<string, number>;
 	}> {
@@ -199,6 +200,18 @@ export const mockSubscriptionsApi = {
 			}
 		}
 
+		// Calculate upcoming count (within 7 days)
+		const now = new Date();
+		let upcomingCount = 0;
+		for (const sub of active) {
+			const nextBilling = new Date(sub.nextBillingDate);
+			const diffTime = nextBilling.getTime() - now.getTime();
+			const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+			if (diffDays >= 0 && diffDays <= 7) {
+				upcomingCount++;
+			}
+		}
+
 		const byCategory: Record<string, number> = {};
 		const byStatus: Record<string, number> = {};
 
@@ -212,6 +225,7 @@ export const mockSubscriptionsApi = {
 			activeCount: active.length,
 			monthlySpending: Math.round(monthlySpending),
 			yearlySpending: Math.round(monthlySpending * 12),
+			upcomingCount,
 			byCategory,
 			byStatus
 		};

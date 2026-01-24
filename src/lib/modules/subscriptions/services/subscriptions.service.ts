@@ -55,13 +55,21 @@ class SubscriptionsService {
 	/**
 	 * 格式化統計數據用於顯示
 	 * 將後端返回的 SubscriptionStats 轉換為 UI 顯示用格式
+	 *
+	 * 後端返回格式：
+	 * {
+	 *   "totalSubscriptions": 15,
+	 *   "activeSubscriptions": 12,
+	 *   "monthlySpending": 2500.00,
+	 *   "yearlySpending": 30000.00
+	 * }
 	 */
 	formatStats(stats: SubscriptionStats): SubscriptionStatsDisplay {
 		return {
-			totalSubscriptions: stats.totalSubscriptions,
-			activeSubscriptions: stats.activeSubscriptions,
-			monthlySpending: this.formatCurrency(stats.monthlySpending),
-			yearlySpending: this.formatCurrency(stats.yearlySpending)
+			totalSubscriptions: stats.totalSubscriptions ?? 0,
+			activeSubscriptions: stats.activeSubscriptions ?? 0,
+			monthlySpending: this.formatCurrency(stats.monthlySpending ?? 0),
+			yearlySpending: this.formatCurrency(stats.yearlySpending ?? 0)
 		};
 	}
 
