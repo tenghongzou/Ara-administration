@@ -6,6 +6,8 @@
  */
 
 import { browser } from '$app/environment';
+import { goto } from '$app/navigation';
+import { reauthService } from '../auth/reauth-service';
 
 // ============================================================================
 // Types
@@ -337,8 +339,34 @@ class ApiClient {
 				processedError = await interceptor(processedError);
 			}
 
+			// 處理 Token 過期：觸發重新驗證彈窗
+			if (processedError.isUnauthorized()) {
+				const token = this.tokenManager.getToken();
+
+				// 只有在有 token 且是 token 過期錯誤時才觸發重新驗證
+				if (
+					token &&
+					reauthService.isTokenExpiredError(
+						processedError.status,
+						processedError.code,
+						processedError.message
+					)
+				) {
+					return reauthService.triggerReauth(() => this.executeRequest<T>(config, timeout));
+				}
+
+				// 其他 401 錯誤，導向登入頁
+				if (browser) {
+					goto('/login');
+				}
+				throw processedError;
+			}
+
 			// Retry on network errors or 5xx errors
-			if (attempt < retryAttempts && (processedError.isNetworkError() || processedError.isServerError())) {
+			if (
+				attempt < retryAttempts &&
+				(processedError.isNetworkError() || processedError.isServerError())
+			) {
 				await this.delay(this.config.retryDelay * (attempt + 1));
 				return this.executeWithRetry<T>(config, timeout, retryAttempts, attempt + 1);
 			}

@@ -2,7 +2,7 @@
 	import { goto, afterNavigate } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { Sidebar, Header } from '$lib/components/layout';
-	import { Toast, Spinner } from '$lib/components/ui';
+	import { Toast, Spinner, ReauthModal } from '$lib/components/ui';
 	import { auth, isAuthenticated, isAuthInitialized, hasAnyPermission, currentUser } from '$lib/stores/auth';
 	import { getRoutePermissions } from '$lib/permissions';
 	import { toast } from '$lib/stores/toast';
@@ -175,6 +175,7 @@
 			</div>
 		</main>
 
+		<ReauthModal />
 		<Toast />
 
 		<!-- WebSocket 連線狀態指示器 (僅開發環境顯示) -->

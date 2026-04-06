@@ -8,6 +8,7 @@ export { default as ErrorBoundary } from './ErrorBoundary.svelte';
 export { default as Input } from './Input.svelte';
 export { default as Modal } from './Modal.svelte';
 export { default as PasswordInput } from './PasswordInput.svelte';
+export { default as ReauthModal } from './ReauthModal.svelte';
 export { default as NotificationDropdown } from './NotificationDropdown.svelte';
 export { default as Select } from './Select.svelte';
 export { default as Spinner } from './Spinner.svelte';
