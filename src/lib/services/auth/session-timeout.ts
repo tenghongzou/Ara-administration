@@ -125,8 +125,14 @@ class SessionTimeoutService {
 		});
 	}
 
+	private lastActivityWritten = 0;
+
 	private handleActivity = (): void => {
-		this.updateLastActivity();
+		const now = Date.now();
+		if (now - this.lastActivityWritten > 15_000) {
+			this.lastActivityWritten = now;
+			this.updateLastActivity();
+		}
 	};
 
 	private updateLastActivity(): void {

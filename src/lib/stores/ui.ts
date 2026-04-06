@@ -24,21 +24,25 @@ function getInitialState(): UIState {
 function createUIStore() {
 	const { subscribe, update, set } = writable<UIState>(getInitialState());
 
-	// Handle window resize
+	// Handle window resize (debounced)
 	if (browser) {
+		let resizeTimer: ReturnType<typeof setTimeout>;
 		window.addEventListener('resize', () => {
-			const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
-			update((state) => {
-				// Auto-close sidebar when switching to mobile
-				if (isMobile && !state.isMobile) {
-					return { ...state, isMobile, sidebarOpen: false };
-				}
-				// Auto-open sidebar when switching to desktop
-				if (!isMobile && state.isMobile) {
-					return { ...state, isMobile, sidebarOpen: true };
-				}
-				return { ...state, isMobile };
-			});
+			clearTimeout(resizeTimer);
+			resizeTimer = setTimeout(() => {
+				const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
+				update((state) => {
+					// Auto-close sidebar when switching to mobile
+					if (isMobile && !state.isMobile) {
+						return { ...state, isMobile, sidebarOpen: false };
+					}
+					// Auto-open sidebar when switching to desktop
+					if (!isMobile && state.isMobile) {
+						return { ...state, isMobile, sidebarOpen: true };
+					}
+					return { ...state, isMobile };
+				});
+			}, 150);
 		});
 	}
 

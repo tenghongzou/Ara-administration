@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { config } from '$lib/constants';
 	import { usersApi, roleLabels, statusLabels } from '$lib/services';
 	import type { User } from '$lib/types';
@@ -107,8 +108,16 @@
 
 		batchDeleting = true;
 		try {
-			await Promise.all(selectedUsers.map((user) => usersApi.deleteUser(user.id)));
-			toast.success(`已刪除 ${selectedUsers.length} 位使用者`);
+			const results = await Promise.allSettled(
+				selectedUsers.map((user) => usersApi.deleteUser(user.id))
+			);
+			const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+			const failed = results.filter((r) => r.status === 'rejected').length;
+			if (failed > 0) {
+				toast.warning(`已刪除 ${succeeded} 位，${failed} 位刪除失敗`);
+			} else {
+				toast.success(`已刪除 ${succeeded} 位使用者`);
+			}
 			showBatchDeleteModal = false;
 			selectedUsers = [];
 			loadUsers();
@@ -119,7 +128,7 @@
 		}
 	}
 
-	$effect(() => {
+	onMount(() => {
 		loadUsers();
 	});
 

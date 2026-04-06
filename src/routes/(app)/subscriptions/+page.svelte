@@ -124,10 +124,16 @@
 
 		batchDeleting = true;
 		try {
-			await Promise.all(
+			const results = await Promise.allSettled(
 				selectedSubscriptions.map((sub) => subscriptionsApi.deleteSubscription(sub.id))
 			);
-			toast.success(`已刪除 ${selectedSubscriptions.length} 筆訂閱`);
+			const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+			const failed = results.filter((r) => r.status === 'rejected').length;
+			if (failed > 0) {
+				toast.warning(`已刪除 ${succeeded} 筆，${failed} 筆刪除失敗`);
+			} else {
+				toast.success(`已刪除 ${succeeded} 筆訂閱`);
+			}
 			showBatchDeleteModal = false;
 			selectedSubscriptions = [];
 			loadSubscriptions();

@@ -10,6 +10,15 @@ import type {
 	SubscriptionStatus
 } from '$lib/types';
 
+// Re-export API types as canonical source (avoid duplication)
+export type {
+	MonthlySpending,
+	CategorySpending,
+	AnalyticsData,
+	CalendarDayData,
+	ImportResult
+} from '$lib/services/subscriptions/api';
+
 // ==================== 篩選相關 ====================
 
 export interface SubscriptionFilters {
@@ -73,58 +82,6 @@ export interface SubscriptionStatsDisplay {
 	activeCount: number;       // 啟用中訂閱數量
 }
 
-/**
- * 月度消費趨勢
- * 後端 GET /api/v1/subscriptions/analytics 返回格式
- */
-export interface MonthlySpending {
-	month: string;
-	amount: number;    // 後端返回 amount，不是 spending
-	count: number;
-}
-
-/**
- * 分類消費統計
- * 後端 GET /api/v1/subscriptions/analytics 返回格式
- */
-export interface CategorySpending {
-	category: string;
-	label?: string;    // 可選，後端可能不返回
-	count: number;
-	amount: number;    // 後端返回 amount，不是 totalCost
-	percentage: number;
-}
-
-/**
- * 訂閱分析數據
- * 後端 GET /api/v1/subscriptions/analytics 返回格式
- */
-export interface AnalyticsData {
-	monthlyTrend: MonthlySpending[];
-	categoryBreakdown: CategorySpending[];
-	yearlyProjection: number;   // 年度預估
-	averageMonthly: number;     // 平均月度支出
-	topSubscriptions?: {
-		id: string;
-		name: string;
-		cost: number;
-		currency: string;
-	}[];
-}
-
-// ==================== 日曆相關 ====================
-
-export interface CalendarDayData {
-	date: string;
-	subscriptions: {
-		id: string;
-		name: string;
-		cost: number;
-		currency: string;
-	}[];
-	totalAmount?: number;
-}
-
 export interface CalendarStats {
 	monthlyTotal: number;
 	monthlyCount: number;
@@ -133,7 +90,7 @@ export interface CalendarStats {
 
 // ==================== 提醒相關 ====================
 
-export interface UpcomingReminder {
+export interface ReminderDisplay {
 	subscription: Subscription;
 	daysUntilBilling: number;
 	reminderType: 'due_soon' | 'due_today' | 'overdue';
@@ -142,13 +99,6 @@ export interface UpcomingReminder {
 // ==================== 匯入相關 ====================
 
 export type ImportStep = 'upload' | 'mapping' | 'preview' | 'complete';
-
-export interface ImportResult {
-	success: number;
-	failed: number;
-	duplicates: number;
-	errors: ImportError[];
-}
 
 export interface ImportError {
 	row: number;

@@ -5,11 +5,10 @@
 	import { authApi } from '$lib/services';
 	import { auth, isAuthenticated } from '$lib/stores/auth';
 	import { toast } from '$lib/stores/toast';
-	import { Button, Input, Checkbox, PasswordInput, ThemeToggle } from '$lib/components/ui';
+	import { Button, Input, PasswordInput, ThemeToggle } from '$lib/components/ui';
 
 	let account = $state('');
 	let password = $state('');
-	let rememberMe = $state(false);
 	let loading = $state(false);
 	let error = $state('');
 
@@ -89,9 +88,7 @@
 			/>
 		</div>
 
-		<div class="flex items-center justify-between">
-			<Checkbox bind:checked={rememberMe} label="記住我" disabled={loading} />
-
+		<div class="flex items-center justify-end">
 			<a
 				href="/forgot-password"
 				class="text-sm font-medium text-[var(--color-primary-600)] hover:text-[var(--color-primary-500)]"
