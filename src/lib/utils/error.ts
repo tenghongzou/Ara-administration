@@ -8,20 +8,6 @@ export interface AppError {
 	details?: unknown;
 }
 
-export class ApiError extends Error {
-	code: string;
-	statusCode: number;
-	details?: unknown;
-
-	constructor(message: string, code: string = 'UNKNOWN_ERROR', statusCode: number = 500, details?: unknown) {
-		super(message);
-		this.name = 'ApiError';
-		this.code = code;
-		this.statusCode = statusCode;
-		this.details = details;
-	}
-}
-
 /**
  * Common error codes and their user-friendly messages
  */
@@ -40,8 +26,9 @@ export const errorMessages: Record<string, string> = {
  * Get user-friendly error message from error object
  */
 export function getErrorMessage(error: unknown): string {
-	if (error instanceof ApiError) {
-		return errorMessages[error.code] || error.message;
+	if (error instanceof Error && 'code' in error) {
+		const code = (error as { code: string }).code;
+		return errorMessages[code] || error.message;
 	}
 
 	if (error instanceof Error) {
@@ -76,7 +63,7 @@ export async function handleApiError<T>(
 		return await promise;
 	} catch (error) {
 		const appError: AppError = {
-			code: error instanceof ApiError ? error.code : 'UNKNOWN_ERROR',
+			code: error instanceof Error && 'code' in error ? (error as { code: string }).code : 'UNKNOWN_ERROR',
 			message: getErrorMessage(error),
 			details: error
 		};

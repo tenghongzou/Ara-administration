@@ -1,10 +1,11 @@
-import * as XLSX from 'xlsx';
 import type { ParsedRow, ParseResult } from './csv-parser';
 
 /**
  * 解析 Excel 檔案 (.xlsx, .xls)
  */
 export async function parseExcel(file: File): Promise<ParseResult> {
+	const XLSX = await import('xlsx');
+
 	return new Promise((resolve, reject) => {
 		const reader = new FileReader();
 
@@ -91,7 +92,8 @@ export function getFileType(file: File): 'csv' | 'excel' | 'unknown' {
 /**
  * 匯出資料為 Excel
  */
-export function exportToExcel(data: Record<string, unknown>[], filename: string = 'export.xlsx') {
+export async function exportToExcel(data: Record<string, unknown>[], filename: string = 'export.xlsx') {
+	const XLSX = await import('xlsx');
 	const worksheet = XLSX.utils.json_to_sheet(data);
 	const workbook = XLSX.utils.book_new();
 	XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
