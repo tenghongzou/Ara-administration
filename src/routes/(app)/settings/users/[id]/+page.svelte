@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { config } from '$lib/constants';
@@ -82,7 +83,7 @@
 		goto('/settings/users');
 	}
 
-	$effect(() => {
+	onMount(() => {
 		loadUser();
 	});
 </script>

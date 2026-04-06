@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { config } from '$lib/constants';
 	import { rolesApi } from '$lib/services';
 	import type { Role } from '$lib/types';
@@ -27,7 +28,7 @@
 		}
 	}
 
-	$effect(() => {
+	onMount(() => {
 		loadRoles();
 	});
 

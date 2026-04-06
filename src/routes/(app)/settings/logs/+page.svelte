@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { config } from '$lib/constants';
 	import { PageContainer } from '$lib/components/layout';
 	import { logsApi, type AuditLog } from '$lib/services';
@@ -72,7 +73,7 @@
 	}
 
 	// Initial load
-	$effect(() => {
+	onMount(() => {
 		loadLogs();
 	});
 </script>

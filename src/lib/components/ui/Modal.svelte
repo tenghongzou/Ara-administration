@@ -35,6 +35,9 @@
 		full: 'max-w-4xl'
 	};
 
+	let dialogEl: HTMLDivElement | undefined;
+	let previousActiveElement: HTMLElement | null = null;
+
 	function handleClose() {
 		if (closable) {
 			open = false;
@@ -43,8 +46,34 @@
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
+		if (!open) return;
+
 		if (event.key === 'Escape' && closable) {
 			handleClose();
+			return;
+		}
+
+		// Focus trap: Tab cycles within the modal
+		if (event.key === 'Tab' && dialogEl) {
+			const focusable = dialogEl.querySelectorAll<HTMLElement>(
+				'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+			);
+			if (focusable.length === 0) return;
+
+			const first = focusable[0];
+			const last = focusable[focusable.length - 1];
+
+			if (event.shiftKey) {
+				if (document.activeElement === first) {
+					event.preventDefault();
+					last.focus();
+				}
+			} else {
+				if (document.activeElement === last) {
+					event.preventDefault();
+					first.focus();
+				}
+			}
 		}
 	}
 
@@ -53,6 +82,25 @@
 			handleClose();
 		}
 	}
+
+	// Focus management: trap focus on open, restore on close
+	$effect(() => {
+		if (open) {
+			previousActiveElement = document.activeElement as HTMLElement;
+			// Focus the first focusable element after transition
+			requestAnimationFrame(() => {
+				if (dialogEl) {
+					const focusable = dialogEl.querySelector<HTMLElement>(
+						'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+					);
+					focusable?.focus();
+				}
+			});
+		} else if (previousActiveElement) {
+			previousActiveElement.focus();
+			previousActiveElement = null;
+		}
+	});
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -68,6 +116,7 @@
 		aria-modal="true"
 		aria-labelledby={title ? 'modal-title' : undefined}
 		tabindex="-1"
+		bind:this={dialogEl}
 	>
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->

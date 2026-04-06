@@ -171,12 +171,8 @@ function createWebSocketService() {
 		updateState({ status: 'connecting', lastError: null });
 
 		try {
-			// 建立 WebSocket 連線，附帶認證 token
-			const authState = get(auth);
-			const token = authState.token;
-			const url = token ? `${config.url}?token=${encodeURIComponent(token)}` : config.url;
-
-			socket = new WebSocket(url);
+			// 建立 WebSocket 連線（token 不放在 URL 以避免 log 洩漏）
+			socket = new WebSocket(config.url);
 
 			socket.onopen = handleOpen;
 			socket.onclose = handleClose;
@@ -194,6 +190,13 @@ function createWebSocketService() {
 
 	function handleOpen() {
 		log('Connected');
+
+		// 連線後透過首條訊息發送認證 token（避免 token 出現在 URL/logs）
+		const authState = get(auth);
+		if (authState.token && socket?.readyState === WebSocket.OPEN) {
+			socket.send(JSON.stringify({ type: 'auth', token: authState.token }));
+		}
+
 		updateState({
 			status: 'connected',
 			reconnectAttempts: 0,

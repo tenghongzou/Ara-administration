@@ -79,12 +79,19 @@
 	$effect(() => {
 		if (!browser) return;
 
+		let resizeTimer: ReturnType<typeof setTimeout>;
 		const handleResize = () => {
-			viewportWidth = window.innerWidth;
+			clearTimeout(resizeTimer);
+			resizeTimer = setTimeout(() => {
+				viewportWidth = window.innerWidth;
+			}, 150);
 		};
 
 		window.addEventListener('resize', handleResize);
-		return () => window.removeEventListener('resize', handleResize);
+		return () => {
+			clearTimeout(resizeTimer);
+			window.removeEventListener('resize', handleResize);
+		};
 	});
 
 	let allSelected = $derived(data.length > 0 && selectedRows.length === data.length);
