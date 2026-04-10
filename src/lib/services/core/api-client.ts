@@ -418,8 +418,15 @@ class ApiClient {
 
 			try {
 				const errorData: ApiErrorResponse = await response.json();
-				errorMessage = errorData.error || errorData.message || errorMessage;
-				errorCode = errorData.code || errorCode;
+				// Handle nested error format: { "error": { "message": "...", "code": "..." } }
+				const errorObj = errorData.error;
+				if (typeof errorObj === 'object' && errorObj !== null) {
+					errorMessage = (errorObj as Record<string, unknown>).message as string || errorMessage;
+					errorCode = (errorObj as Record<string, unknown>).code as string || errorCode;
+				} else {
+					errorMessage = errorObj as string || errorData.message || errorMessage;
+					errorCode = errorData.code || errorCode;
+				}
 				errorDetails = errorData.details;
 			} catch {
 				errorMessage = response.statusText || errorMessage;
