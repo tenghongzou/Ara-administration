@@ -1,34 +1,35 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-	ApiError,
 	getErrorMessage,
 	handleApiError,
 	retryWithBackoff,
 	errorMessages
 } from '$lib/utils/error';
+import { ApiError } from '$lib/services/core/api-client';
 
 describe('Error Utilities', () => {
 	describe('ApiError', () => {
-		it('should create an ApiError with default values', () => {
-			const error = new ApiError('Something went wrong');
+		it('should create an ApiError with values', () => {
+			// api-client ApiError: constructor(status, code, message, details)
+			const error = new ApiError(500, 'UNKNOWN_ERROR', 'Something went wrong');
 
 			expect(error.message).toBe('Something went wrong');
 			expect(error.code).toBe('UNKNOWN_ERROR');
-			expect(error.statusCode).toBe(500);
+			expect(error.status).toBe(500);
 			expect(error.name).toBe('ApiError');
 		});
 
 		it('should create an ApiError with custom values', () => {
-			const error = new ApiError('Not found', 'NOT_FOUND', 404, { id: 123 });
+			const error = new ApiError(404, 'NOT_FOUND', 'Not found', { id: '123' });
 
 			expect(error.message).toBe('Not found');
 			expect(error.code).toBe('NOT_FOUND');
-			expect(error.statusCode).toBe(404);
-			expect(error.details).toEqual({ id: 123 });
+			expect(error.status).toBe(404);
+			expect(error.details).toEqual({ id: '123' });
 		});
 
 		it('should be an instance of Error', () => {
-			const error = new ApiError('Test');
+			const error = new ApiError(500, 'ERROR', 'Test');
 			expect(error instanceof Error).toBe(true);
 			expect(error instanceof ApiError).toBe(true);
 		});
@@ -36,12 +37,12 @@ describe('Error Utilities', () => {
 
 	describe('getErrorMessage', () => {
 		it('should return mapped message for ApiError with known code', () => {
-			const error = new ApiError('Error', 'UNAUTHORIZED');
+			const error = new ApiError(401, 'UNAUTHORIZED', 'Error');
 			expect(getErrorMessage(error)).toBe(errorMessages.UNAUTHORIZED);
 		});
 
 		it('should return error message for ApiError with unknown code', () => {
-			const error = new ApiError('Custom error message', 'CUSTOM_CODE');
+			const error = new ApiError(500, 'CUSTOM_CODE', 'Custom error message');
 			expect(getErrorMessage(error)).toBe('Custom error message');
 		});
 
@@ -105,7 +106,7 @@ describe('Error Utilities', () => {
 
 		it('should use ApiError code when available', async () => {
 			const onError = vi.fn();
-			const apiError = new ApiError('Unauthorized', 'UNAUTHORIZED', 401);
+			const apiError = new ApiError(401, 'UNAUTHORIZED', 'Unauthorized');
 
 			await handleApiError(Promise.reject(apiError), { onError });
 

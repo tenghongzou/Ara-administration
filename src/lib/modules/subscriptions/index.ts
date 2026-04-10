@@ -15,7 +15,7 @@ export type {
 	AnalyticsData,
 	CalendarDayData,
 	CalendarStats,
-	UpcomingReminder,
+	ReminderDisplay,
 	ImportResult,
 	ImportError,
 	SelectOption
