@@ -37,7 +37,13 @@
 			toast.success('登入成功');
 			goto('/dashboard');
 		} catch (err) {
-			error = err instanceof Error ? err.message : '登入失敗，請稍後再試';
+			if (err instanceof TypeError && err.message.includes('fetch')) {
+				error = '無法連線至伺服器，請確認網路連線或聯繫管理員';
+			} else if (err instanceof Error) {
+				error = err.message;
+			} else {
+				error = '登入失敗，請稍後再試';
+			}
 		} finally {
 			loading = false;
 		}

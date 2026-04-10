@@ -1,6 +1,6 @@
 export const config = {
 	// API 配置
-	apiHost: import.meta.env.VITE_API_HOST || 'http://localhost',
+	apiHost: import.meta.env.VITE_API_HOST || '',
 	apiVersion: import.meta.env.VITE_API_VERSION || 'v1',
 
 	/** @deprecated 使用 apiHost + apiVersion 代替 */
