@@ -218,7 +218,12 @@ export const isAuthInitialized = derived(auth, ($auth) => $auth.isInitialized);
 export const userRole = derived(auth, ($auth) => $auth.user?.role);
 export const userPermissions = derived(auth, ($auth) => $auth.userPermissions);
 
-// 權限檢查函數 (使用當前用戶)
+/**
+ * Imperative permission checks — use in event handlers, guards, and non-reactive code.
+ * These read a point-in-time snapshot and do NOT trigger Svelte reactivity.
+ * For reactive checks in templates, use the `userPermissions` derived store directly:
+ *   `$userPermissions.includes('users:read')`
+ */
 export function hasPermission(permission: Permission): boolean {
 	const state = auth.getState();
 	return checkPermissionInList(state.userPermissions, permission);
