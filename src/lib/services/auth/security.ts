@@ -8,10 +8,13 @@ import { mockUsers } from '../mock-data';
 import { delay } from '../core';
 import { config } from '$lib/constants';
 
-function assertMockMode(): void {
-	if (!config.isMockMode) {
-		throw new Error('Security API endpoints are not yet available. Enable mock mode (VITE_APP_ENV=demo_mock) to use this feature.');
-	}
+/**
+ * Check if mock mode is active.
+ * Security API endpoints are not yet available on the backend.
+ * In non-mock mode, methods return sensible defaults instead of calling a real API.
+ */
+function isMockMode(): boolean {
+	return config.isMockMode;
 }
 
 // Mock sessions data
@@ -57,7 +60,7 @@ let mockSessions: LoginSession[] = [
 export const securityApi = {
 	// 取得登入裝置列表
 	async getSessions(userId: string): Promise<LoginSession[]> {
-		assertMockMode();
+		if (!isMockMode()) return [];
 		await delay(500);
 		return mockSessions
 			.filter((s) => s.userId === userId)
@@ -71,7 +74,7 @@ export const securityApi = {
 
 	// 登出指定裝置
 	async revokeSession(sessionId: string): Promise<void> {
-		assertMockMode();
+		if (!isMockMode()) throw new Error('Session management is not yet available');
 		await delay(400);
 		const index = mockSessions.findIndex((s) => s.id === sessionId);
 		if (index === -1) throw new Error('Session 不存在');
@@ -81,7 +84,7 @@ export const securityApi = {
 
 	// 登出所有其他裝置
 	async revokeAllOtherSessions(userId: string): Promise<number> {
-		assertMockMode();
+		if (!isMockMode()) throw new Error('Session management is not yet available');
 		await delay(600);
 		const before = mockSessions.length;
 		mockSessions = mockSessions.filter((s) => s.userId !== userId || s.isCurrent);
@@ -90,7 +93,7 @@ export const securityApi = {
 
 	// 設定兩步驟驗證 (產生 secret 和 QR code)
 	async setup2FA(userId: string): Promise<TwoFactorSetup> {
-		assertMockMode();
+		if (!isMockMode()) throw new Error('Two-factor authentication is not yet available');
 		await delay(800);
 
 		// 產生模擬的 secret (實際應該用 speakeasy 或類似的庫)
@@ -114,7 +117,7 @@ export const securityApi = {
 
 	// 驗證並啟用兩步驟驗證
 	async verify2FA(userId: string, code: string, secret: string): Promise<boolean> {
-		assertMockMode();
+		if (!isMockMode()) throw new Error('Two-factor authentication is not yet available');
 		await delay(600);
 
 		// Mock 驗證 (實際應該驗證 TOTP)
@@ -134,7 +137,7 @@ export const securityApi = {
 
 	// 停用兩步驟驗證
 	async disable2FA(userId: string, password: string): Promise<void> {
-		assertMockMode();
+		if (!isMockMode()) throw new Error('Two-factor authentication is not yet available');
 		await delay(600);
 
 		// Mock 驗證密碼
@@ -151,7 +154,7 @@ export const securityApi = {
 
 	// 取得兩步驟驗證狀態
 	async get2FAStatus(userId: string): Promise<{ enabled: boolean; enabledAt?: string }> {
-		assertMockMode();
+		if (!isMockMode()) return { enabled: false };
 		await delay(300);
 		const user = mockUsers.find((u) => u.id === userId);
 		return {
@@ -162,7 +165,7 @@ export const securityApi = {
 
 	// 重新產生備份碼
 	async regenerateBackupCodes(userId: string, password: string): Promise<string[]> {
-		assertMockMode();
+		if (!isMockMode()) throw new Error('Two-factor authentication is not yet available');
 		await delay(600);
 
 		// Mock 驗證密碼
