@@ -4,7 +4,7 @@
 
 	onMount(() => {
 		// 重導向至儀表板
-		goto('/dashboard');
+		goto('/dashboard', { replaceState: true });
 	});
 </script>
 

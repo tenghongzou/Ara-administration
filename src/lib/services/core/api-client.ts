@@ -27,12 +27,6 @@ export interface RequestConfig extends RequestInit {
 	skipAuth?: boolean;
 }
 
-export interface ApiResponse<T> {
-	data: T;
-	status: number;
-	headers: Headers;
-}
-
 export interface ApiErrorResponse {
 	error: string;
 	message?: string;

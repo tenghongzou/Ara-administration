@@ -13,14 +13,27 @@
 	let hasError = $state(false);
 	let errorMessage = $state('');
 
+	/**
+	 * Reset the error state, clearing the error display and showing children again.
+	 */
 	export function reset() {
 		hasError = false;
 		errorMessage = '';
 	}
 
-	export function setError(error: Error | string) {
+	/**
+	 * Manually set an error to display. Accepts an Error object or a string message.
+	 * When set, the children content is hidden and the error UI is shown.
+	 */
+	export function setError(error: unknown) {
 		hasError = true;
-		errorMessage = typeof error === 'string' ? error : error.message;
+		if (error instanceof Error) {
+			errorMessage = error.message;
+		} else if (typeof error === 'string') {
+			errorMessage = error;
+		} else {
+			errorMessage = String(error ?? '');
+		}
 	}
 
 	function handleRetry() {

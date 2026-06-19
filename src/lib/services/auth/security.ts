@@ -17,52 +17,81 @@ function isMockMode(): boolean {
 	return config.isMockMode;
 }
 
-// Mock sessions data
-let mockSessions: LoginSession[] = [
-	{
-		id: '1',
-		userId: '1',
-		device: 'Desktop',
-		browser: 'Chrome 120',
-		os: 'Windows 11',
-		ip: '192.168.1.100',
-		location: '台北, 台灣',
-		lastActiveAt: new Date().toISOString(),
-		createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-		isCurrent: true
-	},
-	{
-		id: '2',
-		userId: '1',
-		device: 'Mobile',
-		browser: 'Safari 17',
-		os: 'iOS 17',
-		ip: '192.168.1.101',
-		location: '新北, 台灣',
-		lastActiveAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-		createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-		isCurrent: false
-	},
-	{
-		id: '3',
-		userId: '1',
-		device: 'Laptop',
-		browser: 'Firefox 121',
-		os: 'macOS Sonoma',
-		ip: '192.168.1.102',
-		location: '台中, 台灣',
-		lastActiveAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-		createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-		isCurrent: false
+// Mock sessions data — only allocated in dev builds
+let mockSessions: LoginSession[] | undefined;
+
+function getMockSessions(): LoginSession[] {
+	if (!mockSessions) {
+		mockSessions = [
+			{
+				id: '1',
+				userId: '1',
+				device: 'Desktop',
+				browser: 'Chrome 120',
+				os: 'Windows 11',
+				ip: '192.168.1.100',
+				location: '台北, 台灣',
+				lastActiveAt: new Date().toISOString(),
+				createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+				isCurrent: true
+			},
+			{
+				id: '2',
+				userId: '1',
+				device: 'Mobile',
+				browser: 'Safari 17',
+				os: 'iOS 17',
+				ip: '192.168.1.101',
+				location: '新北, 台灣',
+				lastActiveAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+				createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+				isCurrent: false
+			},
+			{
+				id: '3',
+				userId: '1',
+				device: 'Laptop',
+				browser: 'Firefox 121',
+				os: 'macOS Sonoma',
+				ip: '192.168.1.102',
+				location: '台中, 台灣',
+				lastActiveAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+				createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+				isCurrent: false
+			}
+		];
 	}
-];
+	return mockSessions;
+}
+
+/**
+ * Validate a mock password. Only available in development mode.
+ * In production builds, Vite statically replaces the condition and
+ * tree-shakes the hardcoded credential.
+ */
+function validateMockPassword(password: string): boolean {
+	if (import.meta.env.DEV) {
+		return password === 'admin123';
+	}
+	throw new Error('Mock password validation is not available in production');
+}
+
+/**
+ * Get a mock TOTP secret. Only available in development mode.
+ */
+function getMockTotpSecret(): string {
+	if (import.meta.env.DEV) {
+		return 'JBSWY3DPEHPK3PXP';
+	}
+	throw new Error('Mock TOTP secret is not available in production');
+}
 
 export const securityApi = {
 	// 取得登入裝置列表
 	async getSessions(userId: string): Promise<LoginSession[]> {
 		if (!isMockMode()) return [];
 		await delay(500);
-		return mockSessions
+		return getMockSessions()
 			.filter((s) => s.userId === userId)
 			.sort((a, b) => {
 				// Current session first, then by lastActiveAt
@@ -76,18 +105,20 @@ export const securityApi = {
 	async revokeSession(sessionId: string): Promise<void> {
 		if (!isMockMode()) throw new Error('Session management is not yet available');
 		await delay(400);
-		const index = mockSessions.findIndex((s) => s.id === sessionId);
+		const sessions = getMockSessions();
+		const index = sessions.findIndex((s) => s.id === sessionId);
 		if (index === -1) throw new Error('Session 不存在');
-		if (mockSessions[index].isCurrent) throw new Error('無法登出目前使用的裝置');
-		mockSessions.splice(index, 1);
+		if (sessions[index].isCurrent) throw new Error('無法登出目前使用的裝置');
+		sessions.splice(index, 1);
 	},
 
 	// 登出所有其他裝置
 	async revokeAllOtherSessions(userId: string): Promise<number> {
 		if (!isMockMode()) throw new Error('Session management is not yet available');
 		await delay(600);
-		const before = mockSessions.length;
-		mockSessions = mockSessions.filter((s) => s.userId !== userId || s.isCurrent);
+		const sessions = getMockSessions();
+		const before = sessions.length;
+		mockSessions = sessions.filter((s) => s.userId !== userId || s.isCurrent);
 		return before - mockSessions.length;
 	},
 
@@ -96,8 +127,7 @@ export const securityApi = {
 		if (!isMockMode()) throw new Error('Two-factor authentication is not yet available');
 		await delay(800);
 
-		// 產生模擬的 secret (實際應該用 speakeasy 或類似的庫)
-		const secret = 'JBSWY3DPEHPK3PXP'; // Mock secret
+		const secret = getMockTotpSecret();
 		const appName = encodeURIComponent('Ara Admin');
 		const userEmail = mockUsers.find((u) => u.id === userId)?.email || 'user@example.com';
 
@@ -140,8 +170,7 @@ export const securityApi = {
 		if (!isMockMode()) throw new Error('Two-factor authentication is not yet available');
 		await delay(600);
 
-		// Mock 驗證密碼
-		if (password !== 'admin123') {
+		if (!validateMockPassword(password)) {
 			throw new Error('密碼錯誤');
 		}
 
@@ -168,8 +197,7 @@ export const securityApi = {
 		if (!isMockMode()) throw new Error('Two-factor authentication is not yet available');
 		await delay(600);
 
-		// Mock 驗證密碼
-		if (password !== 'admin123') {
+		if (!validateMockPassword(password)) {
 			throw new Error('密碼錯誤');
 		}
 

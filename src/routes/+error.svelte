@@ -86,13 +86,7 @@
 	}
 
 	// 檢查是否已登入，決定返回目標
-	let authenticated = $state(false);
-	$effect(() => {
-		const unsubscribe = isAuthenticated.subscribe((value) => {
-			authenticated = value;
-		});
-		return unsubscribe;
-	});
+	let authenticated = $derived($isAuthenticated);
 	let homeUrl = $derived(authenticated ? '/dashboard' : '/login');
 </script>
 
