@@ -3,16 +3,9 @@
 	import { notifications, unreadCount, type Notification } from '$lib/stores';
 	import Button from './Button.svelte';
 
-	let isOpen = $state(false);
-	let items = $state<Notification[]>([]);
-	let unread = $state(0);
-
-	notifications.subscribe((state) => {
-		isOpen = state.isOpen;
-		items = state.items;
-	});
-
-	unreadCount.subscribe((count) => (unread = count));
+	let isOpen = $derived($notifications.isOpen);
+	let items = $derived($notifications.items);
+	let unread = $derived($unreadCount);
 
 	function formatTime(timestamp: string): string {
 		const date = new Date(timestamp);
@@ -114,7 +107,7 @@
 						{@const typeStyle = getTypeIcon(item.type)}
 						<div
 							class={cn(
-								'flex gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer border-b border-gray-100 dark:border-gray-800 last:border-b-0',
+								'group flex gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer border-b border-gray-100 dark:border-gray-800 last:border-b-0',
 								!item.read && 'bg-blue-50/50 dark:bg-blue-900/10'
 							)}
 							onclick={() => handleItemClick(item)}

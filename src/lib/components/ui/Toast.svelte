@@ -18,8 +18,7 @@
 		info: 'bg-blue-50 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
 	};
 
-	let toasts: ToastItem[] = $state([]);
-	toast.subscribe((items) => (toasts = items));
+	let toasts: ToastItem[] = $derived($toast);
 </script>
 
 <div class="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 w-80">

@@ -452,7 +452,7 @@ class ApiClient {
 
 			return json as T;
 		} catch {
-			return {} as T;
+			throw new ApiError(response.status, 'PARSE_ERROR', `Failed to parse response body as JSON: ${text.substring(0, 200)}`);
 		}
 	}
 

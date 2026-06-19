@@ -101,8 +101,7 @@
 
 		if (authenticated) {
 			// 已認證：建立 WebSocket 連線
-			const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws';
-			initWebSocket(wsUrl);
+			initWebSocket();
 
 			// 訂閱 WebSocket 事件
 			const unsubscribeConnected = websocket.on('connected', () => {

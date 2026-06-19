@@ -25,13 +25,7 @@
 	let { items, class: className = '' }: Props = $props();
 
 	// Reactive permissions
-	let permissions = $state<readonly string[]>([]);
-	$effect(() => {
-		const unsubscribe = userPermissions.subscribe((p) => {
-			permissions = p;
-		});
-		return unsubscribe;
-	});
+	let permissions = $derived($userPermissions);
 
 	// Filter items based on permissions (now reactive)
 	function filterByPermission(navItems: NavItem[], perms: readonly string[]): NavItem[] {
@@ -46,19 +40,12 @@
 
 	let visibleItems = $derived(filterByPermission(items, permissions));
 
-	let sidebarOpen = $state(true);
-	let isMobile = $state(false);
-	let user = $state<{ name: string; email: string; avatar?: string } | null>(null);
+	let sidebarOpen = $derived($ui.sidebarOpen);
+	let isMobile = $derived($ui.isMobile);
+	let user = $derived($currentUser);
 	let expandedMenus = $state<Set<string>>(new Set());
 	let manuallyCollapsed = $state<Set<string>>(new Set());
 	let lastPathname = $state('');
-
-	ui.subscribe((state) => {
-		sidebarOpen = state.sidebarOpen;
-		isMobile = state.isMobile;
-	});
-
-	currentUser.subscribe((u) => (user = u));
 
 	// Auto-expand menus with active children (only on route change, respect manual collapse)
 	$effect(() => {

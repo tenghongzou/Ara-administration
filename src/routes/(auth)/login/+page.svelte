@@ -14,12 +14,9 @@
 
 	// Redirect to dashboard if already authenticated
 	$effect(() => {
-		let authenticated = false;
-		const unsubscribe = isAuthenticated.subscribe((value) => (authenticated = value));
-		if (browser && authenticated) {
+		if (browser && $isAuthenticated) {
 			goto('/dashboard');
 		}
-		return unsubscribe;
 	});
 
 	async function handleSubmit(event: Event) {
@@ -29,11 +26,10 @@
 
 		try {
 			const response = await authApi.login({ account, password });
-			// 先儲存 token，再獲取權限
-			auth.setUser(response.user, response.token, []);
-			// 現在 token 已儲存，可以獲取權限
+			// token 已由 authApi.login() 設定到 apiClient，可以直接取得權限
 			const permissions = await authApi.getPermissions();
-			auth.setPermissions(permissions);
+			// 一次設定使用者與權限，避免中間出現零權限的狀態
+			auth.setUser(response.user, response.token, permissions);
 			toast.success('登入成功');
 			goto('/dashboard');
 		} catch (err) {

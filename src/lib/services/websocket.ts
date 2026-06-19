@@ -1,4 +1,5 @@
 import { writable, derived, get } from 'svelte/store';
+import { config } from '$lib/constants/config';
 import { browser } from '$app/environment';
 import { notifications } from '$lib/stores/notifications';
 import { auth } from '$lib/stores/auth';
@@ -446,7 +447,7 @@ export const websocket = createWebSocketService();
 
 // 便捷方法：初始化 WebSocket 連線
 export function initWebSocket(url?: string): void {
-	const wsUrl = url || import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws';
+	const wsUrl = url || config.wsUrl;
 	websocket.connect({
 		url: wsUrl,
 		debug: import.meta.env.DEV
