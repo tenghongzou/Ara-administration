@@ -1,0 +1,5 @@
+# Approve esbuild (pulled in by Vite) to run its post-install build script.
+# pnpm 11+ blocks dependency build scripts by default; under --frozen-lockfile
+# in a non-interactive (CI/Docker) build an un-approved script fails the install.
+allowBuilds:
+  esbuild: true
