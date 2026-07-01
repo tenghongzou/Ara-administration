@@ -41,6 +41,13 @@ export const notificationsModuleConfig: ModuleConfig = {
 			href: '/notifications',
 			icon: navIcons.notifications,
 			order: 20
+		},
+		{
+			id: 'notifications-compose',
+			label: '發送通知',
+			href: '/notifications/compose',
+			icon: navIcons.notifications,
+			order: 21
 		}
 	],
 	enabled: true

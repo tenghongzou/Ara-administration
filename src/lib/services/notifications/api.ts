@@ -17,6 +17,16 @@ export interface GetNotificationsParams {
 	type?: string;
 }
 
+export interface DispatchNotificationInput {
+	target: 'broadcast' | 'users';
+	userIds?: string[];
+	type: 'info' | 'success' | 'warning' | 'error';
+	priority?: 'Low' | 'Normal' | 'High' | 'Critical';
+	title: string;
+	message: string;
+	link?: string;
+}
+
 interface NotificationsResponse {
 	data: Notification[];
 	pagination: {
@@ -207,6 +217,16 @@ export const notificationApi = {
 	 */
 	async markAllAsRead(): Promise<void> {
 		await apiClient.post('/notifications/mark-all-read');
+	},
+
+	/**
+	 * 管理員發送/廣播通知
+	 * POST /api/v1/notifications/dispatch
+	 *
+	 * 經後端轉發到通知服務(API key 留在伺服器端)。
+	 */
+	async dispatch(input: DispatchNotificationInput): Promise<void> {
+		await apiClient.post('/notifications/dispatch', input);
 	},
 
 	/**
