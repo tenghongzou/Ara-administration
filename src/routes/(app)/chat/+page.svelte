@@ -29,6 +29,11 @@
 	let showNew = $state(false);
 	let messagesEl = $state<HTMLDivElement | null>(null);
 	let typingBy = $state<string | null>(null);
+	let editingId = $state<string | null>(null);
+	let editDraft = $state('');
+	let reactionPickerFor = $state<string | null>(null);
+
+	const EMOJIS = ['👍', '❤️', '😄', '🎉', '😮', '😢'];
 
 	const socket = createChatSocket();
 	let typingTimer: ReturnType<typeof setTimeout> | null = null;
@@ -130,6 +135,45 @@
 		}
 	}
 
+	function toggleReaction(messageId: string, emoji: string) {
+		reactionPickerFor = null;
+		if (!activeId) return;
+		patchMessage(messageId, (m) => {
+			const reactions = { ...(m.reactions ?? {}) };
+			const list = new Set(reactions[emoji] ?? []);
+			list.has(myId) ? list.delete(myId) : list.add(myId);
+			if (list.size > 0) reactions[emoji] = [...list];
+			else delete reactions[emoji];
+			return { ...m, reactions };
+		});
+		socket.send({ type: 'ToggleReaction', payload: { conversation_id: activeId, message_id: messageId, emoji } });
+	}
+
+	function recall(messageId: string) {
+		if (!activeId) return;
+		patchMessage(messageId, (m) => ({ ...m, recalled_at: Date.now() }));
+		socket.send({ type: 'RecallMessage', payload: { conversation_id: activeId, message_id: messageId } });
+	}
+
+	function startEdit(m: ChatMessage) {
+		editingId = m.id;
+		editDraft = m.content;
+	}
+
+	function cancelEdit() {
+		editingId = null;
+		editDraft = '';
+	}
+
+	function saveEdit(messageId: string) {
+		const content = editDraft.trim();
+		if (!content || !activeId) return;
+		patchMessage(messageId, (m) => ({ ...m, content, updated_at: Date.now() }));
+		socket.send({ type: 'EditMessage', payload: { conversation_id: activeId, message_id: messageId, new_content: content } });
+		editingId = null;
+		editDraft = '';
+	}
+
 	async function startDirect(userId: string) {
 		try {
 			const existing = conversations.find(
@@ -204,11 +248,42 @@
 				}
 				break;
 			}
+			case 'message_recalled': {
+				patchMessage(String(msg.message_id), (m) => ({ ...m, recalled_at: Date.now() }));
+				break;
+			}
+			case 'message_edited': {
+				patchMessage(String(msg.message_id), (m) => ({
+					...m,
+					content: String(msg.new_content ?? m.content),
+					updated_at: Number(msg.edited_at ?? Date.now())
+				}));
+				break;
+			}
+			case 'reaction_update': {
+				const emoji = String(msg.emoji);
+				const uid = String(msg.user_id);
+				const add = msg.action === 'add';
+				patchMessage(String(msg.message_id), (m) => {
+					const reactions = { ...(m.reactions ?? {}) };
+					const list = new Set(reactions[emoji] ?? []);
+					// idempotent: safe even if the actor also applied it optimistically
+					add ? list.add(uid) : list.delete(uid);
+					if (list.size > 0) reactions[emoji] = [...list];
+					else delete reactions[emoji];
+					return { ...m, reactions };
+				});
+				break;
+			}
 			case 'error': {
 				if (msg.message) toast.error(String(msg.message));
 				break;
 			}
 		}
+	}
+
+	function patchMessage(id: string, updater: (m: ChatMessage) => ChatMessage) {
+		messages = messages.map((m) => (m.id === id ? updater(m) : m));
 	}
 
 	function emitTyping() {
@@ -302,15 +377,72 @@
 					<p class="text-sm text-gray-500 text-center">還沒有訊息</p>
 				{:else}
 					{#each messages as m (m.id)}
-						<div class="flex {m.sender_id === myId ? 'justify-end' : 'justify-start'}">
+						{@const mine = m.sender_id === myId}
+						<div class="group flex {mine ? 'justify-end' : 'justify-start'}">
 							<div class="max-w-[70%]">
-								{#if m.sender_id !== myId}
+								{#if !mine}
 									<span class="block text-xs text-gray-500 mb-0.5">{userName(m.sender_id)}</span>
 								{/if}
-								<div class="rounded-2xl px-3 py-2 text-sm {m.sender_id === myId ? 'bg-[var(--color-primary-600)] text-white' : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700'}">
-									<p class="whitespace-pre-wrap break-words">{m.content}</p>
-								</div>
-								<span class="block text-[10px] text-gray-400 mt-0.5 {m.sender_id === myId ? 'text-right' : ''}">{formatTime(m.created_at)}</span>
+
+								{#if m.recalled_at}
+									<div class="rounded-2xl px-3 py-2 text-sm italic text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+										此訊息已撤回
+									</div>
+								{:else if editingId === m.id}
+									<div class="flex flex-col gap-1">
+										<textarea
+											class="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1 text-sm text-gray-900 dark:text-gray-100"
+											rows="2"
+											bind:value={editDraft}
+										></textarea>
+										<div class="flex gap-2 justify-end text-xs">
+											<button type="button" class="text-gray-500 hover:underline" onclick={cancelEdit}>取消</button>
+											<button type="button" class="text-[var(--color-primary-600)] hover:underline" onclick={() => saveEdit(m.id)}>儲存</button>
+										</div>
+									</div>
+								{:else}
+									<div class="relative">
+										<div class="rounded-2xl px-3 py-2 text-sm {mine ? 'bg-[var(--color-primary-600)] text-white' : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700'}">
+											<p class="whitespace-pre-wrap break-words">{m.content}</p>
+										</div>
+
+										<!-- hover 動作 -->
+										<div class="absolute -top-3 {mine ? 'left-0' : 'right-0'} hidden group-hover:flex items-center gap-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-full px-1 shadow-sm">
+											<button type="button" class="text-sm px-1 hover:scale-110" title="表情" onclick={() => (reactionPickerFor = reactionPickerFor === m.id ? null : m.id)}>😊</button>
+											{#if mine}
+												<button type="button" class="text-xs px-1 text-gray-500 hover:text-gray-700" title="編輯" onclick={() => startEdit(m)}>編輯</button>
+												<button type="button" class="text-xs px-1 text-red-500 hover:text-red-600" title="撤回" onclick={() => recall(m.id)}>撤回</button>
+											{/if}
+										</div>
+
+										{#if reactionPickerFor === m.id}
+											<div class="absolute top-6 {mine ? 'left-0' : 'right-0'} z-10 flex gap-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-full px-2 py-1 shadow-md">
+												{#each EMOJIS as e}
+													<button type="button" class="text-base hover:scale-125 transition-transform" onclick={() => toggleReaction(m.id, e)}>{e}</button>
+												{/each}
+											</div>
+										{/if}
+									</div>
+
+									<!-- reaction chips -->
+									{#if m.reactions && Object.keys(m.reactions).length > 0}
+										<div class="flex flex-wrap gap-1 mt-1 {mine ? 'justify-end' : ''}">
+											{#each Object.entries(m.reactions) as [emoji, ids]}
+												<button
+													type="button"
+													class="text-xs px-1.5 py-0.5 rounded-full border {ids.includes(myId) ? 'border-[var(--color-primary-500)] bg-[var(--color-primary-50)] dark:bg-[var(--color-primary-900)]/30' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'}"
+													onclick={() => toggleReaction(m.id, emoji)}
+												>
+													{emoji} {ids.length}
+												</button>
+											{/each}
+										</div>
+									{/if}
+								{/if}
+
+								<span class="block text-[10px] text-gray-400 mt-0.5 {mine ? 'text-right' : ''}">
+									{formatTime(m.created_at)}{#if m.updated_at && !m.recalled_at}・已編輯{/if}
+								</span>
 							</div>
 						</div>
 					{/each}
