@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
 	import { get } from 'svelte/store';
 	import { auth } from '$lib/stores/auth';
 	import { apiClient } from '$lib/services/core/api-client';
 	import { toast } from '$lib/stores/toast';
 	import { chatApi } from '$lib/services/chat/api';
+	import { createChatSocket, type ChatServerMessage } from '$lib/services/chat/socket';
 	import type { ConversationSummary, ChatMessage } from '$lib/services/chat/types';
 
 	interface UserLite {
@@ -27,6 +28,11 @@
 	let sending = $state(false);
 	let showNew = $state(false);
 	let messagesEl = $state<HTMLDivElement | null>(null);
+	let typingBy = $state<string | null>(null);
+
+	const socket = createChatSocket();
+	let typingTimer: ReturnType<typeof setTimeout> | null = null;
+	let lastTypingSent = 0;
 
 	const activeConversation = $derived(conversations.find((c) => c.id === activeId) ?? null);
 
@@ -153,8 +159,74 @@
 		}
 	}
 
+	function upsertConversationFromMessage(m: ChatMessage) {
+		const idx = conversations.findIndex((c) => c.id === m.conversation_id);
+		if (idx === -1) {
+			// unknown conversation → refresh list lazily
+			loadConversations();
+			return;
+		}
+		const conv = { ...conversations[idx] };
+		conv.last_message = {
+			message_id: m.id,
+			sender_id: m.sender_id,
+			content_preview: m.content.slice(0, 80),
+			content_type: m.content_type,
+			created_at: m.created_at
+		};
+		conv.updated_at = m.created_at;
+		if (m.conversation_id !== activeId && m.sender_id !== myId) {
+			conv.unread_count = (conv.unread_count ?? 0) + 1;
+		}
+		conversations = [conv, ...conversations.filter((c) => c.id !== conv.id)];
+	}
+
+	async function handleServerMessage(msg: ChatServerMessage) {
+		switch (msg.type) {
+			case 'message': {
+				const m = msg.message as ChatMessage | undefined;
+				if (!m) return;
+				if (m.conversation_id === activeId) {
+					if (!messages.some((x) => x.id === m.id)) {
+						messages = [...messages, m];
+						await scrollToBottom();
+						if (m.sender_id !== myId) chatApi.markRead(m.conversation_id, m.id).catch(() => {});
+					}
+				}
+				upsertConversationFromMessage(m);
+				break;
+			}
+			case 'typing': {
+				if (msg.conversation_id === activeId && msg.user_id !== myId) {
+					typingBy = userName(String(msg.user_id));
+					if (typingTimer) clearTimeout(typingTimer);
+					typingTimer = setTimeout(() => (typingBy = null), 4000);
+				}
+				break;
+			}
+			case 'error': {
+				if (msg.message) toast.error(String(msg.message));
+				break;
+			}
+		}
+	}
+
+	function emitTyping() {
+		const now = Date.now();
+		if (!activeId || now - lastTypingSent < 2000) return;
+		lastTypingSent = now;
+		socket.send({ type: 'Typing', payload: { conversation_id: activeId, is_typing: true } });
+	}
+
 	onMount(async () => {
 		await Promise.all([loadUsers(), loadConversations()]);
+		socket.on(handleServerMessage);
+		socket.connect();
+	});
+
+	onDestroy(() => {
+		if (typingTimer) clearTimeout(typingTimer);
+		socket.disconnect();
 	});
 </script>
 
@@ -245,6 +317,10 @@
 				{/if}
 			</div>
 
+			<div class="h-5 px-4 text-xs text-gray-400">
+				{#if typingBy}{typingBy} 正在輸入…{/if}
+			</div>
+
 			<div class="p-3 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
 				<div class="flex items-end gap-2">
 					<textarea
@@ -253,6 +329,7 @@
 						placeholder="輸入訊息…(Enter 送出,Shift+Enter 換行)"
 						bind:value={draft}
 						onkeydown={onKeydown}
+						oninput={emitTyping}
 					></textarea>
 					<button
 						type="button"
