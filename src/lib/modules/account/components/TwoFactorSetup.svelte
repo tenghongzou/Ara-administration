@@ -1,4 +1,5 @@
 <script lang="ts">
+	import QRCode from 'qrcode';
 	import { Modal, Button } from '$lib/components/ui';
 	import { twoFactorService } from '../services/two-factor.service';
 	import { toast } from '$lib/stores/toast';
@@ -19,6 +20,19 @@
 	let verificationCode = $state('');
 	let loading = $state(false);
 	let backupCodes = $state<string[]>([]);
+	let qrDataUrl = $state('');
+
+	// Render the otpauth:// provisioning URI as a scannable QR code
+	$effect(() => {
+		const url = setup?.qrCodeUrl;
+		if (!url) {
+			qrDataUrl = '';
+			return;
+		}
+		QRCode.toDataURL(url, { width: 192, margin: 1 })
+			.then((dataUrl) => (qrDataUrl = dataUrl))
+			.catch(() => (qrDataUrl = ''));
+	});
 
 	$effect(() => {
 		if (open && !setup) {
@@ -130,16 +144,8 @@
 					<div
 						class="w-48 h-48 mx-auto bg-white dark:bg-gray-100 rounded-lg flex items-center justify-center p-4"
 					>
-						{#if setup}
-							<div
-								class="w-full h-full bg-gray-100 dark:bg-gray-200 rounded flex items-center justify-center"
-							>
-								<svg class="w-32 h-32 text-gray-800" fill="currentColor" viewBox="0 0 24 24">
-									<path
-										d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2h3v3h-3v-3zm-5 0h3v3h-3v-3zm5 5h3v3h-3v-3zm-5 0h3v3h-3v-3z"
-									/>
-								</svg>
-							</div>
+						{#if setup && qrDataUrl}
+							<img src={qrDataUrl} alt="2FA QR Code" class="w-full h-full rounded" />
 						{:else}
 							<svg class="w-6 h-6 text-gray-400 animate-spin" fill="none" viewBox="0 0 24 24">
 								<circle

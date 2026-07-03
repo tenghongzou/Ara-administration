@@ -13,6 +13,7 @@ import { apiClient, ApiError } from '../core/api-client';
 export interface LoginRequest {
 	account: string; // 可以是 username 或 email
 	password: string;
+	twoFactorCode?: string; // TOTP 或備份碼；帳號啟用 2FA 時必填
 }
 
 export interface LoginResponse {
@@ -68,6 +69,10 @@ export const authApi = {
 			return response;
 		} catch (error) {
 			if (error instanceof ApiError) {
+				// 2FA 挑戰錯誤保留原始 ApiError，讓登入頁依 code 切換驗證碼輸入
+				if (error.code === '2FA_REQUIRED' || error.code === '2FA_INVALID_CODE') {
+					throw error;
+				}
 				throw new Error(ERROR_MESSAGES[error.message] || error.message);
 			}
 			throw error;

@@ -3,6 +3,7 @@
 	import { browser } from '$app/environment';
 	import { config } from '$lib/constants';
 	import { authApi } from '$lib/services';
+	import { ApiError } from '$lib/services/core/api-client';
 	import { auth, isAuthenticated } from '$lib/stores/auth';
 	import { toast } from '$lib/stores/toast';
 	import { Button, Input, PasswordInput, ThemeToggle } from '$lib/components/ui';
@@ -11,6 +12,9 @@
 	let password = $state('');
 	let loading = $state(false);
 	let error = $state('');
+	// 2FA 挑戰：登入回傳 2FA_REQUIRED 後切換為驗證碼輸入
+	let twoFactorRequired = $state(false);
+	let twoFactorCode = $state('');
 
 	// Redirect to dashboard if already authenticated
 	$effect(() => {
@@ -25,7 +29,11 @@
 		loading = true;
 
 		try {
-			const response = await authApi.login({ account, password });
+			const response = await authApi.login({
+				account,
+				password,
+				...(twoFactorRequired && twoFactorCode ? { twoFactorCode: twoFactorCode.trim() } : {})
+			});
 			// token 已由 authApi.login() 設定到 apiClient，可以直接取得權限
 			const permissions = await authApi.getPermissions();
 			// 一次設定使用者與權限，避免中間出現零權限的狀態
@@ -33,7 +41,12 @@
 			toast.success('登入成功');
 			goto('/dashboard');
 		} catch (err) {
-			if (err instanceof TypeError && err.message.includes('fetch')) {
+			if (err instanceof ApiError && err.code === '2FA_REQUIRED') {
+				twoFactorRequired = true;
+			} else if (err instanceof ApiError && err.code === '2FA_INVALID_CODE') {
+				error = '驗證碼錯誤，請輸入驗證器 App 中的最新代碼或備份碼';
+				twoFactorCode = '';
+			} else if (err instanceof TypeError && err.message.includes('fetch')) {
 				error = '無法連線至伺服器，請確認網路連線或聯繫管理員';
 			} else if (err instanceof Error) {
 				error = err.message;
@@ -43,6 +56,12 @@
 		} finally {
 			loading = false;
 		}
+	}
+
+	function backToCredentials() {
+		twoFactorRequired = false;
+		twoFactorCode = '';
+		error = '';
 	}
 </script>
 
@@ -57,8 +76,12 @@
 	</div>
 
 	<div class="text-center">
-		<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">登入</h2>
-		<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">請輸入您的帳號密碼</p>
+		<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+			{twoFactorRequired ? '兩步驟驗證' : '登入'}
+		</h2>
+		<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+			{twoFactorRequired ? '請輸入驗證器 App 中的 6 位數代碼或備份碼' : '請輸入您的帳號密碼'}
+		</p>
 	</div>
 
 	{#if error}
@@ -68,41 +91,72 @@
 	{/if}
 
 	<form class="mt-8 space-y-6" onsubmit={handleSubmit} data-testid="login-form">
-		<div class="space-y-4">
-			<Input
-				bind:value={account}
-				type="text"
-				label="帳號"
-				placeholder="使用者名稱或電子郵件"
-				hint="可使用使用者名稱或電子郵件登入"
-				required
-				disabled={loading}
-				id="account"
-				autocomplete="username"
-			/>
-			<PasswordInput
-				bind:value={password}
-				label="密碼"
-				required
-				disabled={loading}
-				id="password"
-				autocomplete="current-password"
-			/>
-		</div>
+		{#if twoFactorRequired}
+			<div class="space-y-4">
+				<Input
+					bind:value={twoFactorCode}
+					type="text"
+					label="驗證碼"
+					placeholder="6 位數代碼或 XXXX-XXXX 備份碼"
+					required
+					disabled={loading}
+					id="two-factor-code"
+					autocomplete="one-time-code"
+				/>
+			</div>
 
-		<div class="flex items-center justify-end">
-			<a
-				href="/forgot-password"
-				class="text-sm font-medium text-[var(--color-primary-600)] hover:text-[var(--color-primary-500)]"
-			>
-				忘記密碼？
-			</a>
-		</div>
+			<div class="flex items-center justify-end">
+				<button
+					type="button"
+					class="text-sm font-medium text-[var(--color-primary-600)] hover:text-[var(--color-primary-500)]"
+					onclick={backToCredentials}
+				>
+					返回重新登入
+				</button>
+			</div>
 
-		<div data-testid="submit-button">
-			<Button type="submit" class="w-full" {loading}>
-				{#snippet children()}{loading ? '登入中...' : '登入'}{/snippet}
-			</Button>
-		</div>
+			<div data-testid="submit-button">
+				<Button type="submit" class="w-full" {loading}>
+					{#snippet children()}{loading ? '驗證中...' : '驗證'}{/snippet}
+				</Button>
+			</div>
+		{:else}
+			<div class="space-y-4">
+				<Input
+					bind:value={account}
+					type="text"
+					label="帳號"
+					placeholder="使用者名稱或電子郵件"
+					hint="可使用使用者名稱或電子郵件登入"
+					required
+					disabled={loading}
+					id="account"
+					autocomplete="username"
+				/>
+				<PasswordInput
+					bind:value={password}
+					label="密碼"
+					required
+					disabled={loading}
+					id="password"
+					autocomplete="current-password"
+				/>
+			</div>
+
+			<div class="flex items-center justify-end">
+				<a
+					href="/forgot-password"
+					class="text-sm font-medium text-[var(--color-primary-600)] hover:text-[var(--color-primary-500)]"
+				>
+					忘記密碼？
+				</a>
+			</div>
+
+			<div data-testid="submit-button">
+				<Button type="submit" class="w-full" {loading}>
+					{#snippet children()}{loading ? '登入中...' : '登入'}{/snippet}
+				</Button>
+			</div>
+		{/if}
 	</form>
 </div>
