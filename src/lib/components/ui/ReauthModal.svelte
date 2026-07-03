@@ -7,13 +7,13 @@
 	import { apiClient } from '$lib/services/core/api-client';
 	import { goto } from '$app/navigation';
 
-	let state = $state<ReauthState>({ isOpen: false, isLoading: false, error: null });
+	let reauthState = $state<ReauthState>({ isOpen: false, isLoading: false, error: null });
 	let password = $state('');
 
 	// 訂閱 reauthService 的狀態
 	$effect(() => {
 		const unsubscribe = reauthService.subscribe((s) => {
-			state = s;
+			reauthState = s;
 		});
 		return unsubscribe;
 	});
@@ -42,7 +42,7 @@
 	}
 </script>
 
-<Modal bind:open={state.isOpen} title="登入已過期" size="sm" closable={false}>
+<Modal bind:open={reauthState.isOpen} title="登入已過期" size="sm" closable={false}>
 	{#snippet children()}
 		<form onsubmit={handleSubmit} class="space-y-4">
 			<div class="text-center mb-4">
@@ -77,18 +77,18 @@
 				placeholder="請輸入您的密碼"
 				autocomplete="current-password"
 				required
-				error={state.error || undefined}
-				disabled={state.isLoading}
+				error={reauthState.error || undefined}
+				disabled={reauthState.isLoading}
 			/>
 		</form>
 	{/snippet}
 
 	{#snippet footer()}
 		<div class="flex justify-end gap-3">
-			<Button variant="ghost" onclick={handleLogout} disabled={state.isLoading}>
+			<Button variant="ghost" onclick={handleLogout} disabled={reauthState.isLoading}>
 				{#snippet children()}登出{/snippet}
 			</Button>
-			<Button variant="primary" loading={state.isLoading} onclick={handleSubmit}>
+			<Button variant="primary" loading={reauthState.isLoading} onclick={handleSubmit}>
 				{#snippet children()}重新登入{/snippet}
 			</Button>
 		</div>

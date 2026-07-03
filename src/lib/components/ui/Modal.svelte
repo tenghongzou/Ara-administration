@@ -35,7 +35,7 @@
 		full: 'max-w-4xl'
 	};
 
-	let dialogEl: HTMLDivElement | undefined;
+	let dialogEl = $state<HTMLDivElement | undefined>(undefined);
 	let previousActiveElement: HTMLElement | null = null;
 
 	function handleClose() {

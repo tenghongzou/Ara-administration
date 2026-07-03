@@ -3,6 +3,14 @@ import { browser } from '$app/environment';
 import type { NotificationSettings } from '$lib/types';
 
 /**
+ * Update payload: each section may itself be partial — the store
+ * deep-merges one level per section.
+ */
+export type NotificationSettingsUpdate = {
+	[K in keyof NotificationSettings]?: Partial<NotificationSettings[K]>;
+};
+
+/**
  * 通知設定 Store
  * 用於客戶端緩存使用者的通知偏好設定，供即時推送服務使用
  */
@@ -82,11 +90,10 @@ function createNotificationSettingsStore() {
 		/**
 		 * 更新部分設定
 		 */
-		update: (partial: Partial<NotificationSettings>) => {
+		update: (partial: NotificationSettingsUpdate) => {
 			update((current) => {
 				const updated = {
 					...current,
-					...partial,
 					email: partial.email ? { ...current.email, ...partial.email } : current.email,
 					push: partial.push ? { ...current.push, ...partial.push } : current.push,
 					inApp: partial.inApp ? { ...current.inApp, ...partial.inApp } : current.inApp,
