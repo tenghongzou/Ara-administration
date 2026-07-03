@@ -10,9 +10,8 @@ import { config } from '$lib/constants';
 
 /**
  * Check if mock mode is active.
- * 2FA endpoints talk to the real backend (/auth/2fa/*) in non-mock mode;
- * session management is not yet available on the backend and returns
- * sensible defaults there.
+ * In non-mock mode 2FA talks to /auth/2fa/* and session management to
+ * /auth/sessions* on the real backend.
  */
 function isMockMode(): boolean {
 	return config.isMockMode;
@@ -98,7 +97,9 @@ function getMockTotpSecret(): string {
 export const securityApi = {
 	// 取得登入裝置列表
 	async getSessions(userId: string): Promise<LoginSession[]> {
-		if (!isMockMode()) return [];
+		if (!isMockMode()) {
+			return apiClient.get<LoginSession[]>('/auth/sessions');
+		}
 		await delay(500);
 		return getMockSessions()
 			.filter((s) => s.userId === userId)
@@ -112,7 +113,20 @@ export const securityApi = {
 
 	// 登出指定裝置
 	async revokeSession(sessionId: string): Promise<void> {
-		if (!isMockMode()) throw new Error('Session management is not yet available');
+		if (!isMockMode()) {
+			try {
+				await apiClient.delete(`/auth/sessions/${sessionId}`);
+				return;
+			} catch (error) {
+				if (error instanceof ApiError && error.code === 'CURRENT_SESSION') {
+					throw new Error('無法登出目前使用的裝置');
+				}
+				if (error instanceof ApiError && error.status === 404) {
+					throw new Error('Session 不存在');
+				}
+				throw error;
+			}
+		}
 		await delay(400);
 		const sessions = getMockSessions();
 		const index = sessions.findIndex((s) => s.id === sessionId);
@@ -123,7 +137,10 @@ export const securityApi = {
 
 	// 登出所有其他裝置
 	async revokeAllOtherSessions(userId: string): Promise<number> {
-		if (!isMockMode()) throw new Error('Session management is not yet available');
+		if (!isMockMode()) {
+			const result = await apiClient.post<{ revoked: number }>('/auth/sessions/revoke-others', {});
+			return result.revoked;
+		}
 		await delay(600);
 		const sessions = getMockSessions();
 		const before = sessions.length;
