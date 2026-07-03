@@ -1,6 +1,6 @@
 /**
  * Chat service types — mirror the Rust chat service REST/WS contract.
- * See services/chat/docs/*/03-api-reference.md
+ * See services/chat/docs/<locale>/03-api-reference.md
  */
 
 export type ConversationType = 'direct' | 'group';
