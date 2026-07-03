@@ -261,6 +261,12 @@ function createWebSocketService() {
 	 * 將 ServerNotificationEvent 格式轉換為前端 NotificationPayload 格式
 	 */
 	function handleServerNotification(event: { type: 'notification' } & ServerNotificationEvent) {
+		// 權限快取失效訊號：靜默重抓權限，不進通知中心、不彈 Toast
+		if (event.event_type === 'permissions.changed') {
+			void refreshPermissions();
+			return;
+		}
+
 		// 從後端 payload 中提取通知內容，或使用預設值
 		const payload = event.payload || {};
 
@@ -296,6 +302,18 @@ function createWebSocketService() {
 			category: payload.category,
 			urgent: payload.urgent || event.metadata?.priority === 'Critical'
 		});
+	}
+
+	async function refreshPermissions() {
+		try {
+			// 延遲載入避免 websocket ↔ auth api 的模組循環
+			const { authApi } = await import('./auth/api');
+			const permissions = await authApi.getPermissions();
+			auth.setPermissions(permissions);
+			log('Permissions refreshed after permissions.changed event');
+		} catch (error) {
+			log('Failed to refresh permissions:', error);
+		}
 	}
 
 	function scheduleReconnect() {
