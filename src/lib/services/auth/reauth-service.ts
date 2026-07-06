@@ -9,6 +9,8 @@ export interface ReauthState {
 	isOpen: boolean;
 	isLoading: boolean;
 	error: string | null;
+	/** True once the backend has signalled the account needs a 2FA code. */
+	needsTwoFactor: boolean;
 }
 
 interface PendingRequest<T = unknown> {
@@ -21,7 +23,8 @@ class ReauthService {
 	private state = writable<ReauthState>({
 		isOpen: false,
 		isLoading: false,
-		error: null
+		error: null,
+		needsTwoFactor: false
 	});
 
 	private pendingRequests: PendingRequest[] = [];
@@ -45,16 +48,22 @@ class ReauthService {
 				this.state.set({
 					isOpen: true,
 					isLoading: false,
-					error: null
+					error: null,
+					needsTwoFactor: false
 				});
 			}
 		});
 	}
 
 	/**
-	 * 提交密碼進行重新驗證
+	 * 提交密碼（及必要時的 2FA 驗證碼）進行重新驗證
 	 */
-	async submit(password: string, email: string, onSuccess: (token: string) => void): Promise<void> {
+	async submit(
+		password: string,
+		email: string,
+		onSuccess: (token: string) => void,
+		twoFactorCode?: string
+	): Promise<void> {
 		this.state.update((s) => ({ ...s, isLoading: true, error: null }));
 
 		try {
@@ -62,12 +71,40 @@ class ReauthService {
 			const response = await fetch('/api/v1/auth/reauth', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ email, password })
+				body: JSON.stringify({
+					email,
+					password,
+					...(twoFactorCode ? { twoFactorCode } : {})
+				})
 			});
 
 			if (!response.ok) {
-				const error = await response.json().catch(() => ({}));
-				throw new Error(error.error || 'Invalid credentials');
+				const body = await response.json().catch(() => ({}));
+				const code: string = body?.error?.code ?? '';
+				const message: string = body?.error?.message ?? 'Invalid credentials';
+
+				// 帳號啟用 2FA：切換到要求輸入驗證碼的狀態，而非視為失敗
+				if (code === '2FA_REQUIRED') {
+					this.state.update((s) => ({
+						...s,
+						isLoading: false,
+						needsTwoFactor: true,
+						error: null
+					}));
+					return;
+				}
+
+				if (code === '2FA_INVALID_CODE') {
+					this.state.update((s) => ({
+						...s,
+						isLoading: false,
+						needsTwoFactor: true,
+						error: '驗證碼錯誤'
+					}));
+					return;
+				}
+
+				throw new Error(message);
 			}
 
 			const result = await response.json();
@@ -81,7 +118,7 @@ class ReauthService {
 			onSuccess(token);
 
 			// 關閉彈窗
-			this.state.set({ isOpen: false, isLoading: false, error: null });
+			this.state.set({ isOpen: false, isLoading: false, error: null, needsTwoFactor: false });
 			this.isReauthenticating = false;
 
 			// 重試所有等待中的請求
@@ -100,7 +137,7 @@ class ReauthService {
 	 * 取消重新驗證（用戶選擇登出）
 	 */
 	cancel(): void {
-		this.state.set({ isOpen: false, isLoading: false, error: null });
+		this.state.set({ isOpen: false, isLoading: false, error: null, needsTwoFactor: false });
 		this.isReauthenticating = false;
 
 		this.pendingRequests.forEach(({ reject }) => {

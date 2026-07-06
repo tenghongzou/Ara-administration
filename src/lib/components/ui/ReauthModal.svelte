@@ -7,8 +7,14 @@
 	import { apiClient } from '$lib/services/core/api-client';
 	import { goto } from '$app/navigation';
 
-	let reauthState = $state<ReauthState>({ isOpen: false, isLoading: false, error: null });
+	let reauthState = $state<ReauthState>({
+		isOpen: false,
+		isLoading: false,
+		error: null,
+		needsTwoFactor: false
+	});
 	let password = $state('');
+	let twoFactorCode = $state('');
 
 	// 訂閱 reauthService 的狀態
 	$effect(() => {
@@ -27,16 +33,29 @@
 			return;
 		}
 
-		await reauthService.submit(password, user.email, (token: string) => {
-			// 更新 auth store 和 apiClient
-			auth.setUser(user!, token, auth.getState().userPermissions);
-			apiClient.setToken(token);
-			password = '';
-		});
+		// 一旦後端要求 2FA，尚未輸入驗證碼前不送出
+		if (reauthState.needsTwoFactor && !twoFactorCode.trim()) {
+			return;
+		}
+
+		await reauthService.submit(
+			password,
+			user.email,
+			(token: string) => {
+				// 更新 auth store 和 apiClient
+				auth.setUser(user!, token, auth.getState().userPermissions);
+				apiClient.setToken(token);
+				password = '';
+				twoFactorCode = '';
+			},
+			reauthState.needsTwoFactor ? twoFactorCode.trim() : undefined
+		);
 	}
 
 	function handleLogout() {
 		reauthService.cancel();
+		password = '';
+		twoFactorCode = '';
 		auth.logout();
 		goto('/login');
 	}
@@ -77,9 +96,36 @@
 				placeholder="請輸入您的密碼"
 				autocomplete="current-password"
 				required
-				error={reauthState.error || undefined}
+				error={reauthState.needsTwoFactor ? undefined : reauthState.error || undefined}
 				disabled={reauthState.isLoading}
 			/>
+
+			{#if reauthState.needsTwoFactor}
+				<div>
+					<label
+						for="reauth-2fa-code"
+						class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+					>
+						兩步驟驗證碼
+					</label>
+					<input
+						id="reauth-2fa-code"
+						bind:value={twoFactorCode}
+						type="text"
+						inputmode="numeric"
+						autocomplete="one-time-code"
+						placeholder="6 位數驗證碼或備份碼"
+						disabled={reauthState.isLoading}
+						class="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+					/>
+					<p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+						請輸入驗證器應用程式的驗證碼，或一組未使用的備份碼。
+					</p>
+					{#if reauthState.error}
+						<p class="text-sm text-red-600 dark:text-red-400 mt-1">{reauthState.error}</p>
+					{/if}
+				</div>
+			{/if}
 		</form>
 	{/snippet}
 
