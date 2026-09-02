@@ -29,9 +29,9 @@
 
 	// Filter options for form (remove "all" option)
 	const formCategoryOptions = categoryOptions.filter((o) => o.value !== '');
-	const formStatusOptions = statusOptions.filter(
-		(o) => o.value !== '' && o.value !== 'cancelled' && o.value !== 'expired'
-	);
+	// 「已過期」由後端依扣款日判定，使用者不可手動選；「已取消」可手動設定，
+	// 設為已取消後不再計入月費／年費總計、即將扣款與行事曆。
+	const formStatusOptions = statusOptions.filter((o) => o.value !== '' && o.value !== 'expired');
 	const formBillingCycleOptions = billingCycleOptions.filter((o) => o.value !== '');
 
 	function handleSubmit(event: Event) {
