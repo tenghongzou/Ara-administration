@@ -193,8 +193,10 @@ export const mockSubscriptionsApi = {
 		for (const sub of active) {
 			if (sub.billingCycle === 'monthly') {
 				monthlySpending += sub.cost;
-			} else if (sub.billingCycle === 'yearly') {
+			} else if (sub.billingCycle === 'annual') {
 				monthlySpending += sub.cost / 12;
+			} else if (sub.billingCycle === 'semi-annual') {
+				monthlySpending += sub.cost / 6;
 			} else if (sub.billingCycle === 'quarterly') {
 				monthlySpending += sub.cost / 3;
 			}

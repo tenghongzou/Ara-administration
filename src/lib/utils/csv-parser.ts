@@ -199,14 +199,6 @@ function parseCategory(value: string): ServiceCategory | null {
 		'工具': 'productivity',
 		gaming: 'gaming',
 		'遊戲': 'gaming',
-		software: 'software',
-		'軟體': 'software',
-		news: 'news',
-		'新聞': 'news',
-		education: 'education',
-		'教育': 'education',
-		fitness: 'fitness',
-		'健身': 'fitness',
 		other: 'other',
 		'其他': 'other'
 	};
@@ -225,15 +217,14 @@ function parseBillingCycle(value: string): BillingCycle | null {
 		quarterly: 'quarterly',
 		'季繳': 'quarterly',
 		'每季': 'quarterly',
-		yearly: 'yearly',
-		annual: 'yearly',
-		'年繳': 'yearly',
-		'每年': 'yearly',
-		lifetime: 'lifetime',
-		'終身': 'lifetime',
-		'買斷': 'lifetime',
-		custom: 'custom',
-		'自訂': 'custom'
+		'semi-annual': 'semi-annual',
+		semiannual: 'semi-annual',
+		'半年繳': 'semi-annual',
+		'每半年': 'semi-annual',
+		annual: 'annual',
+		yearly: 'annual',
+		'年繳': 'annual',
+		'每年': 'annual'
 	};
 	return map[normalized] || null;
 }

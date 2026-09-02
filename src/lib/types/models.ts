@@ -121,21 +121,11 @@ export interface RegisterData {
 
 // 訂閱管理相關
 // 後端支援的計費週期
-export type BillingCycle = 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'lifetime' | 'custom';
+export type BillingCycle = 'weekly' | 'monthly' | 'quarterly' | 'semi-annual' | 'annual';
 // 後端支援的訂閱狀態
-export type SubscriptionStatus = 'active' | 'paused' | 'cancelled' | 'trial' | 'expired';
+export type SubscriptionStatus = 'active' | 'paused' | 'cancelled' | 'expired';
 // 後端支援的服務分類
-export type ServiceCategory =
-	| 'streaming'
-	| 'software'
-	| 'gaming'
-	| 'music'
-	| 'news'
-	| 'cloud'
-	| 'productivity'
-	| 'education'
-	| 'fitness'
-	| 'other';
+export type ServiceCategory = 'streaming' | 'music' | 'cloud' | 'productivity' | 'gaming' | 'other';
 export type PaymentMethod = 'credit_card' | 'debit_card' | 'bank_transfer' | 'paypal' | 'other';
 
 export interface Subscription {

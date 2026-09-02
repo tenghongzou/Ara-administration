@@ -271,7 +271,7 @@ describe('CSV Parser', () => {
 
 			const results = mapAndValidateData(data, baseMapping);
 
-			expect(results[0].data.billingCycle).toBe('yearly');
+			expect(results[0].data.billingCycle).toBe('annual');
 		});
 
 		it('should handle Chinese payment method values', () => {

@@ -86,12 +86,10 @@ class SubscriptionsService {
 				return cost;
 			case 'quarterly':
 				return cost / 3;
-			case 'yearly':
+			case 'semi-annual':
+				return cost / 6;
+			case 'annual':
 				return cost / 12;
-			case 'lifetime':
-				return 0; // Lifetime has no recurring cost
-			case 'custom':
-				return cost; // Assume monthly for custom
 			default:
 				return cost;
 		}
@@ -334,14 +332,10 @@ class SubscriptionsService {
 	getCategoryLabel(category: ServiceCategory): string {
 		const labels: Record<ServiceCategory, string> = {
 			streaming: '影音串流',
-			software: '軟體',
 			gaming: '遊戲',
 			music: '音樂',
-			news: '新聞',
 			cloud: '雲端儲存',
 			productivity: '生產力工具',
-			education: '教育',
-			fitness: '健身',
 			other: '其他'
 		};
 		return labels[category] || category;
@@ -352,9 +346,8 @@ class SubscriptionsService {
 			weekly: '週繳',
 			monthly: '月繳',
 			quarterly: '季繳',
-			yearly: '年繳',
-			lifetime: '終身',
-			custom: '自訂'
+			'semi-annual': '半年繳',
+			annual: '年繳'
 		};
 		return labels[cycle] || cycle;
 	}
@@ -364,7 +357,6 @@ class SubscriptionsService {
 			active: '啟用中',
 			paused: '已暫停',
 			cancelled: '已取消',
-			trial: '試用中',
 			expired: '已過期'
 		};
 		return labels[status] || status;
@@ -373,14 +365,10 @@ class SubscriptionsService {
 	getCategoryColorClass(category: ServiceCategory): string {
 		const colors: Record<ServiceCategory, string> = {
 			streaming: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-			software: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
 			gaming: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
 			music: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-			news: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
 			cloud: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
 			productivity: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-			education: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
-			fitness: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
 			other: 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400'
 		};
 		return colors[category] || colors.other;
@@ -389,14 +377,10 @@ class SubscriptionsService {
 	getCategoryChartColor(category: ServiceCategory): string {
 		const colors: Record<ServiceCategory, string> = {
 			streaming: 'rgb(239, 68, 68)',
-			software: 'rgb(99, 102, 241)',
 			gaming: 'rgb(249, 115, 22)',
 			music: 'rgb(34, 197, 94)',
-			news: 'rgb(245, 158, 11)',
 			cloud: 'rgb(59, 130, 246)',
 			productivity: 'rgb(168, 85, 247)',
-			education: 'rgb(20, 184, 166)',
-			fitness: 'rgb(236, 72, 153)',
 			other: 'rgb(107, 114, 128)'
 		};
 		return colors[category] || colors.other;
